@@ -1,0 +1,49 @@
+[package]
+name = "wallflow"
+version = "0.1.0"
+edition = "2021"
+authors = ["MK <mksg@mk.sg>"]
+description = "Elegant wallpaper management with smooth transitions"
+license = "MIT"
+repository = "https://github.com/MKSG-MugunthKumar/wallflow"
+
+[[bin]]
+name = "wallflow"
+path = "src/main.rs"
+
+[dependencies]
+# CLI argument parsing
+clap = { version = "4.4", features = ["derive"] }
+
+# Configuration and serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+
+# Error handling
+anyhow = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# System directories (XDG compliance)
+dirs = "5.0"
+
+# Async runtime (for future HTTP downloads)
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "process", "time"] }
+
+# HTTP client (for wallhaven/picsum)
+reqwest = { version = "0.11", features = ["json"] }
+
+# Random selection
+rand = "0.8"
+
+# Path manipulation
+path-clean = "1.0"
+shellexpand = "3.1"
+
+# Command existence checking
+which = "4.4"
+
+[dev-dependencies]
+tempfile = "3.8"

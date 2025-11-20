@@ -1,0 +1,136 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo
+Cargo.lock
+# Uncomment to commit Cargo.lock for applications (keep commented for libraries)
+# !Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+
+# Configuration (user-specific)
+config/local.yml
+.config/wallflow/config.yml
+
+# Build artifacts
+*.so
+*.dylib
+*.dll
+
+# Profiling data
+*.profraw
+*.profdata
+
+# Coverage reports
+target/coverage/
+coverage/
+lcov.info
+*.gcda
+*.gcno
+
+# Generated documentation
+docs/target/
+book/
+
+# Rust analyzer
+rust-project.json
+
+# MacOS
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Windows
+desktop.ini
+
+# Vim
+*.swp
+*.swo
+*.tmp
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+
+# VSCode
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+*.code-workspace
+
+# Local development artifacts
+wallpapers/
+downloads/
+*.jpg
+*.png
+*.webp
+*.jpeg
+
+# Test outputs
+test-results/
+screenshots/
+
+# Backup files
+*.backup
+*.old

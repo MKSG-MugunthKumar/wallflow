@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# wallflow-reference - URL construction examples for Rust implementation
+# Keep this as reference for API integration
+
+set -euo pipefail
+
+# Wallhaven API download example
+fetch_wallhaven() {
+    local category="${1:-nature}"
+    local resolution="${2:-2560x1440}"
+    local api_key="${3:-}"  # Optional API key
+
+    echo "📡 Wallhaven API URL construction example:"
+
+    # Build API URL
+    local api_url="https://wallhaven.cc/api/v1/search"
+    local params="?q=${category}&categories=100&purity=100&resolutions=${resolution}&sorting=random"
+
+    # Add API key if provided (increases rate limits)
+    if [[ -n "$api_key" ]]; then
+        params="${params}&apikey=${api_key}"
+    fi
+
+    local full_url="${api_url}${params}"
+    echo "🔗 URL: $full_url"
+
+    # Make the API call
+    echo "📥 Fetching wallpaper metadata..."
+    local response=$(curl -s --fail "$full_url")
+
+    # Parse JSON to get random wallpaper URL
+    local wallpaper_url=$(echo "$response" | jq -r '.data[0].path // empty')
+
+    if [[ -z "$wallpaper_url" ]]; then
+        echo "❌ No wallpapers found for category: $category"
+        return 1
+    fi
+
+    echo "🎯 Selected: $wallpaper_url"
+
+    # Extract filename
+    local filename="wallhaven_${category}_$(date '+%Y%m%d_%H%M%S').jpg"
+    local download_path="$HOME/Pictures/Wallpapers/downloads/$filename"
+
+    # Download the wallpaper
+    echo "⬇️  Downloading to: $download_path"
+    mkdir -p "$(dirname "$download_path")"
+
+    if curl -s --fail -o "$download_path" "$wallpaper_url"; then
+        echo "✅ Downloaded: $(basename "$download_path")"
+        echo "$download_path"
+    else
+        echo "❌ Download failed"
+        return 1
+    fi
+}
+
+# Picsum (Lorem Picsum) download example
+fetch_picsum() {
+    local width="${1:-2560}"
+    local height="${2:-1440}"
+
+    echo "📡 Picsum API URL construction example:"
+
+    # Picsum provides random photos at specified resolution
+    local api_url="https://picsum.photos/${width}/${height}?random"
+    echo "🔗 URL: $api_url"
+
+    # Generate filename
+    local filename="picsum_$(date '+%Y%m%d_%H%M%S').jpg"
+    local download_path="$HOME/Pictures/Wallpapers/downloads/$filename"
+
+    echo "⬇️  Downloading random ${width}x${height} photo..."
+    mkdir -p "$(dirname "$download_path")"
+
+    if curl -s --fail -L -o "$download_path" "$api_url"; then
+        echo "✅ Downloaded: $(basename "$download_path")"
+        echo "$download_path"
+    else
+        echo "❌ Download failed"
+        return 1
+    fi
+}
+
+# Example usage
+case "${1:-help}" in
+    wallhaven)
+        category="${2:-nature}"
+        resolution="${3:-2560x1440}"
+        api_key="${4:-}"
+        fetch_wallhaven "$category" "$resolution" "$api_key"
+        ;;
+    picsum)
+        width="${2:-2560}"
+        height="${3:-1440}"
+        fetch_picsum "$width" "$height"
+        ;;
+    *)
+        echo "🌊 wallflow API Reference"
+        echo ""
+        echo "Usage:"
+        echo "  $0 wallhaven [category] [resolution] [api_key]"
+        echo "  $0 picsum [width] [height]"
+        echo ""
+        echo "Examples:"
+        echo "  $0 wallhaven nature 2560x1440"
+        echo "  $0 wallhaven anime 1920x1080 your_api_key"
+        echo "  $0 picsum 3840 2160"
+        echo ""
+        echo "📚 Use this script as reference for Rust HTTP implementation"
+        ;;
+esac
