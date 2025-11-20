@@ -1,0 +1,392 @@
+#!/usr/bin/env bash
+# wallflow - Elegant wallpaper management with smooth transitions
+# Sources: local (filesystem), wallhaven (search), picsum (random)
+# Supports: awww (Wayland), KDE Plasma, pywal (color schemes)
+# Config: ~/.config/wallflow/config.yml
+# Author: MK
+# URL: https://github.com/MKSG-MugunthKumar/wallflow
+
+set -euo pipefail
+
+# Configuration file path
+CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/wallflow/config.yml"
+
+# Function to parse YAML config (simple bash implementation)
+parse_config() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        echo "Warning: Config file not found at $CONFIG_FILE, using defaults" >&2
+        return 1
+    fi
+
+    # Read YAML values using a simple parser
+    eval "$(
+        sed -e 's/[[:space:]]*$//g' -e 's/[[:space:]]*#.*//g' -e '/^[[:space:]]*$/d' "$CONFIG_FILE" |
+        awk '
+        BEGIN { depth = 0; prefix = "" }
+        /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_-]*:[[:space:]]*$/ {
+            # Section header
+            match($0, /^[[:space:]]*/);
+            current_depth = RLENGTH;
+
+            if (current_depth > depth) {
+                # Going deeper
+                gsub(/^[[:space:]]*/, "", $0);
+                gsub(/:.*$/, "", $0);
+                if (prefix != "") prefix = prefix "_";
+                prefix = prefix $0;
+            } else if (current_depth == depth) {
+                # Same level
+                if (prefix != "") {
+                    split(prefix, parts, "_");
+                    prefix = "";
+                    for (i = 1; i < length(parts); i++) {
+                        if (prefix != "") prefix = prefix "_";
+                        prefix = prefix parts[i];
+                    }
+                }
+                gsub(/^[[:space:]]*/, "", $0);
+                gsub(/:.*$/, "", $0);
+                if (prefix != "") prefix = prefix "_";
+                prefix = prefix $0;
+            } else {
+                # Going back up
+                gsub(/^[[:space:]]*/, "", $0);
+                gsub(/:.*$/, "", $0);
+                split(prefix, parts, "_");
+                prefix = "";
+                for (i = 1; i <= current_depth; i++) {
+                    if (prefix != "") prefix = prefix "_";
+                    prefix = prefix parts[i];
+                }
+                prefix = prefix "_" $0;
+            }
+            depth = current_depth;
+        }
+        /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_-]*:[[:space:]]*[^[:space:]]/ {
+            # Key-value pair
+            match($0, /^[[:space:]]*/);
+            indent = RLENGTH;
+            gsub(/^[[:space:]]*/, "", $0);
+            split($0, kv, ":");
+            key = kv[1];
+            value = substr($0, length(key) + 2);
+            gsub(/^[[:space:]]*/, "", value);
+            gsub(/[[:space:]]*$/, "", value);
+            gsub(/^"/, "", value);
+            gsub(/"$/, "", value);
+
+            if (prefix != "") {
+                var_name = toupper(prefix "_" key);
+            } else {
+                var_name = toupper(key);
+            }
+            gsub(/-/, "_", var_name);
+
+            print var_name "=\"" value "\""
+        }
+        '
+    )"
+}
+
+# Load configuration with defaults
+load_config() {
+    # Set defaults first
+    # XDG path resolution with fallback hierarchy:
+    # 1. WALLPAPER_DIR (environment override)
+    # 2. XDG_PICTURES_DIR/Wallpapers (XDG spec)
+    # 3. HOME/Pictures/Wallpapers (fallback)
+    local xdg_pictures="${XDG_PICTURES_DIR:-$HOME/Pictures}"
+    PATHS_LOCAL="${WALLPAPER_DIR:-$xdg_pictures/Wallpapers}"
+    PATHS_DOWNLOADS="${PATHS_LOCAL}/downloads"
+    TRANSITION_TYPE="${TRANSITION_TYPE:-random}"
+    TRANSITION_DURATION="${TRANSITION_DURATION:-5}"
+    CLEANUP_KEEP_COUNT="10"
+    TIMER_INTERVAL="30"
+    TIMER_RANDOMIZE="5m"
+    SOURCES_DEFAULT="wallhaven"
+    SOURCES_CATEGORY="nature"
+    SOURCES_WALLHAVEN_RESOLUTION="2560x1440"
+    SOURCES_PICSUM_WIDTH="2560"
+    SOURCES_PICSUM_HEIGHT="1440"
+    LOGGING_ENABLED="true"
+    LOGGING_LEVEL="info"
+
+    # Try to parse config file and override defaults
+    if parse_config; then
+        # Expand environment variables in paths
+        PATHS_LOCAL=$(eval echo "$PATHS_LOCAL")
+        PATHS_DOWNLOADS=$(eval echo "$PATHS_DOWNLOADS")
+    fi
+}
+
+# Initialize configuration
+load_config
+
+# Default behavior from arguments or config
+SOURCE="${1:-$SOURCES_DEFAULT}"
+CATEGORY="${2:-$SOURCES_CATEGORY}"
+
+# Logging
+log() {
+    if [[ "$LOGGING_ENABLED" == "true" ]]; then
+        echo "$(date '+%Y-%m-%d %H:%M:%S') [wallflow] $*" >&2
+    fi
+}
+
+# Create directories if they don't exist
+mkdir -p "$PATHS_LOCAL" "$PATHS_DOWNLOADS"
+
+# Function to get a random wallpaper from local collection
+get_local_wallpaper() {
+    local wallpaper
+    wallpaper=$(find "$PATHS_LOCAL" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) 2>/dev/null | shuf -n 1)
+
+    if [[ -z "$wallpaper" ]]; then
+        log "Error: No wallpapers found in $PATHS_LOCAL"
+        return 1
+    fi
+
+    log "Selected local wallpaper: $(basename "$wallpaper")"
+    echo "$wallpaper"
+}
+
+# Function to fetch from Wallhaven
+fetch_wallhaven() {
+    local query="${1:-$SOURCES_CATEGORY}"
+    local api_url="https://wallhaven.cc/api/v1/search?q=${query}&sorting=random&atleast=${SOURCES_WALLHAVEN_RESOLUTION}"
+    local timestamp=$(date +%Y%m%d_%H%M%S)
+
+    log "Fetching from Wallhaven: $query (resolution: $SOURCES_WALLHAVEN_RESOLUTION)"
+
+    # Get random wallpaper URL using proper JSON parsing
+    local json=$(curl -sL "$api_url")
+    local image_url=$(echo "$json" | jq -r '.data[0].path // empty')
+
+    if [[ -z "$image_url" ]]; then
+        log "Error: No wallpaper found on Wallhaven"
+        return 1
+    fi
+
+    local extension="${image_url##*.}"
+    local output="${PATHS_DOWNLOADS}/wallhaven_${query}_${timestamp}.${extension}"
+
+    curl -sL -o "$output" "$image_url"
+
+    if [[ -f "$output" ]] && [[ -s "$output" ]]; then
+        log "Downloaded: $(basename "$output")"
+        echo "$output"
+    else
+        log "Error: Download failed from Wallhaven"
+        return 1
+    fi
+}
+
+# Function to fetch from Picsum
+fetch_picsum() {
+    local timestamp=$(date +%Y%m%d_%H%M%S)
+    local url="https://picsum.photos/${SOURCES_PICSUM_WIDTH}/${SOURCES_PICSUM_HEIGHT}"
+    local output="${PATHS_DOWNLOADS}/picsum_${timestamp}.jpg"
+
+    log "Fetching from Picsum (resolution: ${SOURCES_PICSUM_WIDTH}x${SOURCES_PICSUM_HEIGHT})"
+    curl -sL -o "$output" "$url"
+
+    if [[ -f "$output" ]] && [[ -s "$output" ]]; then
+        # Verify it's actually an image
+        if file "$output" | grep -q "image\|JPEG\|PNG"; then
+            log "Downloaded: $(basename "$output")"
+            echo "$output"
+        else
+            log "Error: Downloaded file is not an image"
+            rm -f "$output"
+            return 1
+        fi
+    else
+        log "Error: Download failed from Picsum"
+        return 1
+    fi
+}
+
+# Function to select random transition type from config
+select_transition_type() {
+    # Check if TRANSITION_TYPE contains multiple values (array-like)
+    if [[ "$TRANSITION_TYPE" =~ ^- || "$TRANSITION_TYPE" =~ \| ]]; then
+        # Parse array-like values and pick random
+        local transitions=()
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^[[:space:]]*-[[:space:]]*(.+) ]]; then
+                transitions+=("${BASH_REMATCH[1]}")
+            fi
+        done < <(grep -A20 "^[[:space:]]*type:" "$CONFIG_FILE" 2>/dev/null || echo)
+
+        if [[ ${#transitions[@]} -gt 0 ]]; then
+            echo "${transitions[$((RANDOM % ${#transitions[@]}))]}"
+        else
+            echo "random"
+        fi
+    else
+        echo "$TRANSITION_TYPE"
+    fi
+}
+
+# Function to apply wallpaper using best available method
+apply_wallpaper() {
+    local wallpaper="$1"
+    local success=false
+
+    # Select transition type (could be random from array)
+    local selected_transition
+    selected_transition=$(select_transition_type)
+
+    # Apply wallpaper with awww (Wayland wallpaper daemon)
+    if command -v awww >/dev/null 2>&1; then
+        log "Setting wallpaper with awww (transition: $selected_transition, duration: ${TRANSITION_DURATION}s)..."
+        if awww img "$wallpaper" --transition-type "$selected_transition" --transition-fps "${TRANSITION_FPS:-30}" --transition-step "${TRANSITION_STEP:-90}" 2>&1; then
+            success=true
+            log "awww wallpaper set successfully"
+        else
+            log "Error: Failed to set wallpaper with awww"
+            return 1
+        fi
+    else
+        log "Error: awww not found - wallflow requires awww to be installed"
+        log "Install awww from: https://codeberg.org/LGFae/awww"
+        return 1
+    fi
+
+    # Generate color scheme with pywal if available
+    if command -v wal >/dev/null 2>&1; then
+        log "Generating color scheme with pywal..."
+        if wal -i "$wallpaper" -n 2>&1; then
+            log "pywal color scheme generated successfully"
+
+            # Notify running Neovim instances about color change
+            if command -v nvim >/dev/null 2>&1; then
+                # Find all running Neovim instances and reload wal colorscheme
+                for socket in /tmp/nvim.*.0; do
+                    if [[ -S "$socket" ]]; then
+                        # Use the enhanced WalColors command with better error handling
+                        nvim --server "$socket" --remote-send ':WalColors<CR>' 2>/dev/null || true
+                        log "Notified Neovim instance: $(basename "$socket")"
+                    fi
+                done
+
+                # Alternative: Use nvr if available (neovim-remote)
+                if command -v nvr >/dev/null 2>&1; then
+                    nvr --nostart --remote-send ':WalColors<CR>' 2>/dev/null || true
+                    log "Notified Neovim via nvr"
+                fi
+            fi
+        else
+            log "Warning: Failed to generate color scheme with pywal"
+        fi
+    fi
+
+    if [ "$success" = true ]; then
+        return 0
+    else
+        log "Error: All wallpaper methods failed"
+        return 1
+    fi
+}
+
+# Function to cleanup old downloaded wallpapers using configurable count
+cleanup_old_wallpapers() {
+    log "Cleaning up old wallpapers (keeping ${CLEANUP_KEEP_COUNT})..."
+    # List files by modification time (newest first), skip the first N, remove the rest
+    local tail_arg=$((CLEANUP_KEEP_COUNT + 1))
+    ls -t "$PATHS_DOWNLOADS" 2>/dev/null | tail -n "+${tail_arg}" | xargs -I {} rm -f "$PATHS_DOWNLOADS/{}" 2>/dev/null || true
+}
+
+# Function to show config information
+show_config() {
+    echo "wallflow Configuration:"
+    echo "  Config file: $CONFIG_FILE"
+    echo "  Local wallpapers: $PATHS_LOCAL"
+    echo "  Downloads: $PATHS_DOWNLOADS"
+    echo "  Transition: $TRANSITION_TYPE (${TRANSITION_DURATION}s)"
+    echo "  Cleanup: Keep $CLEANUP_KEEP_COUNT files"
+    echo "  Timer: Every ${TIMER_INTERVAL} minutes"
+    echo "  Default: $SOURCES_DEFAULT ($SOURCES_CATEGORY)"
+}
+
+# Main execution
+main() {
+    local wallpaper_path
+
+    # Get wallpaper from specified source
+    case "$SOURCE" in
+        local)
+            wallpaper_path=$(get_local_wallpaper)
+            ;;
+        wallhaven)
+            wallpaper_path=$(fetch_wallhaven "$CATEGORY")
+            ;;
+        picsum)
+            wallpaper_path=$(fetch_picsum)
+            ;;
+        config|info)
+            show_config
+            exit 0
+            ;;
+        *)
+            echo "wallflow - Elegant wallpaper management" >&2
+            echo "" >&2
+            echo "Usage: $0 [local|wallhaven|picsum|config] [category]" >&2
+            echo "  local     - Random wallpaper from local collection" >&2
+            echo "  wallhaven - Download from Wallhaven with category search" >&2
+            echo "  picsum    - Download random photo from Picsum" >&2
+            echo "  config    - Show current configuration" >&2
+            echo "" >&2
+            echo "Examples:" >&2
+            echo "  $0 local" >&2
+            echo "  $0 wallhaven anime" >&2
+            echo "  $0 picsum" >&2
+            echo "  $0 config" >&2
+            exit 1
+            ;;
+    esac
+
+    # Check if wallpaper was found/downloaded successfully
+    if [[ -z "$wallpaper_path" ]] || [[ ! -f "$wallpaper_path" ]]; then
+        log "Error: Failed to get wallpaper from source: $SOURCE"
+        exit 1
+    fi
+
+    # Apply wallpaper
+    if apply_wallpaper "$wallpaper_path"; then
+        log "Successfully set wallpaper: $(basename "$wallpaper_path")"
+    else
+        log "Error: Failed to apply wallpaper"
+        exit 1
+    fi
+
+    # Cleanup old downloads if we downloaded something new
+    if [[ "$SOURCE" != "local" ]]; then
+        cleanup_old_wallpapers
+    fi
+
+    log "Wallpaper operation completed successfully"
+}
+
+# Show usage if no arguments and not being sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]] && [[ $# -eq 0 ]]; then
+    echo "🌊 wallflow - Elegant wallpaper management" >&2
+    echo "Config: $CONFIG_FILE" >&2
+    echo "" >&2
+    echo "Usage: $0 [local|wallhaven|picsum|config] [category]" >&2
+    echo "" >&2
+    echo "Sources:" >&2
+    echo "  local     - Random from collection: $PATHS_LOCAL" >&2
+    echo "  wallhaven - Download with search: wallhaven.cc" >&2
+    echo "  picsum    - Random photo: picsum.photos" >&2
+    echo "  config    - Show current configuration" >&2
+    echo "" >&2
+    echo "Examples:" >&2
+    echo "  $0 local" >&2
+    echo "  $0 wallhaven anime" >&2
+    echo "  $0 picsum" >&2
+    echo "  $0 config" >&2
+    exit 0
+fi
+
+main "$@"

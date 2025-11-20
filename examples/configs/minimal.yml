@@ -1,0 +1,24 @@
+# wallflow - Minimal Configuration
+# Simple setup for basic wallpaper management
+
+paths:
+  local: "${XDG_PICTURES_DIR:-${HOME}/Pictures}/Wallpapers"
+  downloads: "${XDG_PICTURES_DIR:-${HOME}/Pictures}/Wallpapers/downloads"
+
+transition:
+  type: "fade"
+  duration: 3
+
+timer:
+  interval: 60
+  randomize: "5m"
+
+sources:
+  default: "local"
+
+cleanup:
+  keep_count: 5
+
+logging:
+  enabled: true
+  level: "info"

@@ -1,0 +1,72 @@
+# wallflow - Power User Configuration
+# Feature-rich setup with multiple sources and transitions
+
+paths:
+  local: "${XDG_PICTURES_DIR:-${HOME}/Pictures}/Wallpapers"
+  downloads: "${XDG_PICTURES_DIR:-${HOME}/Pictures}/Wallpapers/downloads"
+
+transition:
+  type:
+    - "fade"
+    - "wipe"
+    - "outer"
+    - "grow"
+    - "wave"
+  duration: 6
+  fps: 30
+
+timer:
+  interval: 20
+  randomize: "3m"
+  start_delay: "30s"
+
+sources:
+  default: "wallhaven"
+  category: "landscape"
+
+  wallhaven:
+    resolution: "3840x2160"
+    quality: "large"
+    purity:
+      - "sfw"
+    categories:
+      - "nature"
+      - "landscape"
+      - "abstract"
+      - "space"
+
+  picsum:
+    width: 3840
+    height: 2160
+
+  local:
+    recursive: true
+    formats:
+      - "jpg"
+      - "jpeg"
+      - "png"
+      - "webp"
+
+cleanup:
+  keep_count: 20
+  auto_cleanup: true
+
+integration:
+  pywal:
+    enabled: true
+    notify_apps:
+      - "neovim"               # Requires RedsXDD/neopywal.nvim plugin
+      - "kitty"                # Built-in pywal support
+
+  desktop:
+    notify_completion: true
+
+logging:
+  enabled: true
+  level: "debug"
+  timestamp: true
+
+advanced:
+  parallel_downloads: 5
+  retry_attempts: 3
+  timeout: 45
