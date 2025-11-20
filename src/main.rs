@@ -106,9 +106,6 @@ async fn main() -> Result<()> {
             show_config(&config)?;
         }
         Commands::Install => {
-            println!("🔥 systemd services are OBSOLETE!");
-            println!("🦀 Just use the built-in daemon:");
-            println!("");
             println!("  # Start daemon (background)");
             println!("  wallflow daemon");
             println!("");
@@ -116,7 +113,7 @@ async fn main() -> Result<()> {
             println!("  wallflow daemon --foreground");
             println!("");
             println!("  # Add to your shell startup script for auto-start:");
-            println!("  echo 'wallflow daemon &' >> ~/.bashrc");
+            println!("  echo 'wallflow daemon &' >> ~/.zshrc");
         }
     }
 

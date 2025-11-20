@@ -5,12 +5,14 @@ A practical, project-based approach to learning Rust through building a real wal
 ## 🎯 Why This Learning Approach Works
 
 **Project-Based Learning Benefits:**
+
 - ✅ **Real motivation** - You'll actually use this daily
 - ✅ **Practical skills** - Learn by solving real problems
 - ✅ **Immediate feedback** - See your progress working
 - ✅ **Portfolio piece** - Showcase your Rust skills
 
 **What Makes wallflow Perfect for Learning:**
+
 - **Right complexity** - Not too simple, not overwhelming
 - **Multiple concepts** - CLI, async, HTTP, configs, system integration
 - **Incremental development** - Add features as you learn
@@ -21,10 +23,12 @@ A practical, project-based approach to learning Rust through building a real wal
 ### **Day 1-3: Get Started**
 
 **Resources:**
+
 - [The Rust Book](https://doc.rust-lang.org/book/) chapters 1-6
 - [Rustlings](https://github.com/rust-lang/rustlings) exercises
 
 **Key Concepts:**
+
 ```rust
 // Ownership & Borrowing
 fn take_ownership(s: String) { }           // Takes ownership
@@ -44,6 +48,7 @@ match might_fail() {
 ```
 
 **Practice with wallflow:**
+
 - Read and understand `src/config.rs`
 - Modify default values in the config
 - Add a new field to the configuration struct
@@ -51,10 +56,12 @@ match might_fail() {
 ### **Day 4-7: CLI & Project Structure**
 
 **Resources:**
+
 - [Command Line Applications in Rust](https://rust-cli.github.io/book/)
 - [clap documentation](https://docs.rs/clap/latest/clap/)
 
 **Hands-on Tasks:**
+
 ```bash
 # 1. Add a new command to the CLI
 cargo run -- --help    # See current commands
@@ -69,6 +76,7 @@ RUST_LOG=debug cargo run -- config
 ```
 
 **Key Learning:**
+
 - How `#[derive(Parser)]` works
 - Command line argument parsing
 - Project structure and modules
@@ -79,11 +87,14 @@ RUST_LOG=debug cargo run -- config
 ### **HTTP & Async Programming**
 
 **Resources:**
+
 - [Async Book](https://rust-lang.github.io/async-book/)
 - [reqwest documentation](https://docs.rs/reqwest/latest/reqwest/)
 
 **Project Tasks:**
+
 1. **Implement Wallhaven API** (see `bin/wallflow-reference` for URLs):
+
 ```rust
 // In src/wallpaper.rs
 pub async fn download_wallhaven(category: &str, resolution: &Resolution) -> Result<PathBuf> {
@@ -104,6 +115,7 @@ pub async fn download_wallhaven(category: &str, resolution: &Resolution) -> Resu
 ```
 
 2. **Add Picsum integration**:
+
 ```rust
 pub async fn download_picsum(resolution: &Resolution) -> Result<PathBuf> {
     let url = format!("https://picsum.photos/{}/{}?random",
@@ -113,6 +125,7 @@ pub async fn download_picsum(resolution: &Resolution) -> Result<PathBuf> {
 ```
 
 **Key Learning:**
+
 - `async`/`await` syntax
 - HTTP clients and JSON parsing
 - File I/O and path handling
@@ -121,7 +134,9 @@ pub async fn download_picsum(resolution: &Resolution) -> Result<PathBuf> {
 ### **System Integration & Process Management**
 
 **Project Tasks:**
+
 1. **Wire up display detection**:
+
 ```rust
 // Use the display.rs functions in wallpaper.rs
 let resolution = config.get_wallhaven_resolution()?;
@@ -129,6 +144,7 @@ download_wallhaven(category, &resolution).await?;
 ```
 
 2. **Improve daemon mode**:
+
 ```rust
 // Add graceful shutdown
 use tokio::signal;
@@ -144,6 +160,7 @@ async fn setup_signal_handlers() {
 ```
 
 3. **Add daemon status checking**:
+
 ```bash
 # New command to implement
 wallflow status    # Show if daemon is running, last change, etc.
@@ -154,7 +171,9 @@ wallflow status    # Show if daemon is running, last change, etc.
 ### **Configuration & Error Handling**
 
 **Project Tasks:**
+
 1. **Better configuration validation**:
+
 ```rust
 impl Config {
     pub fn validate(&self) -> Result<()> {
@@ -168,6 +187,7 @@ impl Config {
 ```
 
 2. **Configuration migration**:
+
 ```rust
 // Handle old config formats gracefully
 // Add version field and migration logic
@@ -176,6 +196,7 @@ impl Config {
 ### **Testing & Documentation**
 
 **Learn Rust Testing:**
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -196,6 +217,7 @@ mod tests {
 ```
 
 **Documentation:**
+
 ```rust
 /// Downloads a wallpaper from Wallhaven API
 ///
@@ -218,7 +240,9 @@ pub async fn download_wallhaven(category: &str, resolution: &Resolution) -> Resu
 ### **Performance & Optimization**
 
 **Project Tasks:**
+
 1. **Parallel downloads**:
+
 ```rust
 use tokio::task::JoinSet;
 
@@ -239,6 +263,7 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 ```
 
 2. **Caching & state management**:
+
 ```rust
 // Add wallpaper cache
 // Remember recently used wallpapers
@@ -246,6 +271,7 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 ```
 
 3. **Cross-platform improvements**:
+
 ```rust
 // Better Windows/macOS support
 // Platform-specific optimizations
@@ -256,6 +282,7 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 **Choose Your Adventure:**
 
 **Option A: TUI Interface** (Great for learning):
+
 ```rust
 // Add ratatui-based interface
 // Vim keybindings
@@ -263,6 +290,7 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 ```
 
 **Option B: Web API** (Learn web development):
+
 ```rust
 // Add axum web server
 // HTTP API for remote control
@@ -270,6 +298,7 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 ```
 
 **Option C: Plugin System** (Learn advanced patterns):
+
 ```rust
 // Dynamic loading of wallpaper sources
 // Custom transition effects
@@ -279,7 +308,9 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 ## 🎯 Learning Milestones & Skills
 
 ### **Week 1-2 Checkpoint**
+
 **Skills Gained:**
+
 - ✅ Rust syntax and ownership model
 - ✅ Error handling with Result types
 - ✅ Project structure and modules
@@ -288,7 +319,9 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 **Deliverable:** Working `wallflow config` and `wallflow local` commands
 
 ### **Week 3-4 Checkpoint**
+
 **Skills Gained:**
+
 - ✅ Async programming with tokio
 - ✅ HTTP clients and JSON parsing
 - ✅ File I/O and system integration
@@ -297,7 +330,9 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 **Deliverable:** Working `wallflow wallhaven` and `wallflow picsum` commands
 
 ### **Week 5-6 Checkpoint**
+
 **Skills Gained:**
+
 - ✅ Testing strategies
 - ✅ Documentation and API design
 - ✅ Configuration management
@@ -306,7 +341,9 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 **Deliverable:** Production-ready daemon with all features
 
 ### **Week 7-8 Checkpoint**
+
 **Skills Gained:**
+
 - ✅ Performance optimization
 - ✅ Advanced async patterns
 - ✅ Cross-platform development
@@ -319,17 +356,20 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 **After completing this project, you'll be ready for:**
 
 **Systems Programming:**
+
 - Operating system components
 - Network services and protocols
 - Database engines
 - Compilers and interpreters
 
 **Web Development:**
+
 - REST APIs with axum or warp
 - WebAssembly applications
 - Real-time systems with websockets
 
 **Performance-Critical Applications:**
+
 - Game engines
 - Scientific computing
 - Cryptocurrency and blockchain
@@ -338,18 +378,21 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 ## 💡 Tips for Success
 
 **Rust-Specific Tips:**
+
 - **Embrace the compiler** - Error messages are your friend
 - **Start simple** - Don't try to optimize too early
 - **Use the community** - r/rust, Discord, Stack Overflow
 - **Read others' code** - Study popular Rust projects
 
 **Learning Strategy:**
+
 - **Build incrementally** - Get each feature working before adding the next
 - **Test frequently** - `cargo check` and `cargo test` often
 - **Document as you go** - Write docstrings for your functions
 - **Refactor regularly** - As you learn better patterns, improve old code
 
 **Resources to Bookmark:**
+
 - [Rust Book](https://doc.rust-lang.org/book/)
 - [Rust by Example](https://doc.rust-lang.org/rust-by-example/)
 - [Rust Standard Library Docs](https://doc.rust-lang.org/std/)
