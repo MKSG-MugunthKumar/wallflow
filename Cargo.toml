@@ -7,21 +7,7 @@ description = "Elegant wallpaper management with smooth transitions, powered by 
 license = "MIT"
 repository = "https://github.com/MKSG-MugunthKumar/wallflow"
 
-[package.metadata.deb]
-maintainer = "MK <mksg@mk.sg>"
-copyright = "2025, Mind Kraft Studios Group (MKSG)"
-section = "graphics"
-priority = "optional"
-depends = "awww, python3-pywal"
-description = """
-Elegant wallpaper management with smooth transitions.
-wallflow brings fluidity to your desktop with beautiful wallpaper
-transitions, dynamic color schemes, and seamless desktop integration.
-"""
 
-[package.metadata.rpm]
-group = "Applications/Graphics"
-summary = "Elegant wallpaper management"
 
 [package.metadata.bundle]
 identifier = "sg.mk.wallflow"
