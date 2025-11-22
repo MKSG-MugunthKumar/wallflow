@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use tracing::{info, error};
+use tracing::info;
 
 mod config;
 mod wallpaper;
@@ -31,10 +31,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Set wallpaper from local collection
-    Local {
-        /// Optional category filter
-        category: Option<String>,
-    },
+    Local,
     /// Download and set wallpaper from Wallhaven
     Wallhaven {
         /// Search category (nature, abstract, etc.)
@@ -50,8 +47,8 @@ enum Commands {
     },
     /// Show current configuration
     Config,
-    /// Generate systemd service files (optional)
-    Install,
+    /// Show usage examples and setup guide
+    Examples,
 }
 
 #[tokio::main]
@@ -79,10 +76,9 @@ async fn main() -> Result<()> {
 
     // Execute command
     match cli.command {
-        Commands::Local { category } => {
-            info!("Setting local wallpaper{}",
-                category.as_ref().map(|c| format!(" (category: {})", c)).unwrap_or_default());
-            wallpaper::set_local(&config, category.as_deref()).await?;
+        Commands::Local => {
+            info!("Setting local wallpaper");
+            wallpaper::set_local(&config).await?;
         }
         Commands::Wallhaven { category } => {
             let search_category = category.unwrap_or(config.sources.category.clone());
@@ -105,12 +101,20 @@ async fn main() -> Result<()> {
         Commands::Config => {
             show_config(&config)?;
         }
-        Commands::Install => {
+        Commands::Examples => {
+            println!("🌊 wallflow Usage Examples");
+            println!("");
+            println!("  # Set wallpaper from local collection");
+            println!("  wallflow local");
+            println!("");
             println!("  # Start daemon (background)");
             println!("  wallflow daemon");
             println!("");
             println!("  # Start daemon (foreground for testing)");
             println!("  wallflow daemon --foreground");
+            println!("");
+            println!("  # Download from Wallhaven");
+            println!("  wallflow wallhaven nature");
             println!("");
             println!("  # Add to your shell startup script for auto-start:");
             println!("  echo 'wallflow daemon &' >> ~/.zshrc");

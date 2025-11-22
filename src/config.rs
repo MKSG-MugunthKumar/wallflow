@@ -2,7 +2,8 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-/// Main configuration structure - replaces that horrific AWK parser! 🔥
+/// Main configuration structure 
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     pub paths: PathsConfig,

@@ -81,7 +81,7 @@ pub async fn run_background(config: Config) -> Result<()> {
 async fn set_wallpaper_by_source(config: &Config) -> Result<()> {
     match config.sources.default.as_str() {
         "local" => {
-            wallpaper::set_local(config, None).await
+            wallpaper::set_local(config).await
         }
         "wallhaven" => {
             wallpaper::set_wallhaven(config, &config.sources.category).await
@@ -91,7 +91,7 @@ async fn set_wallpaper_by_source(config: &Config) -> Result<()> {
         }
         other => {
             warn!("Unknown source '{}', falling back to local", other);
-            wallpaper::set_local(config, None).await
+            wallpaper::set_local(config).await
         }
     }
 }

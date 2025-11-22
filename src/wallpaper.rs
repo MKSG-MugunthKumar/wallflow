@@ -1,14 +1,17 @@
 use anyhow::{Context, Result, anyhow};
 use rand::seq::SliceRandom;
+use reqwest::Client;
+use serde::Deserialize;
+use std::io::{self, Cursor};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use tracing::{info, warn, debug};
+use std::fs::File;
 use tokio::process::Command as AsyncCommand;
-
+use chrono::Local;
 use crate::config::{Config, TransitionType};
 
 /// Set wallpaper from local collection
-pub async fn set_local(config: &Config, _category: Option<&str>) -> Result<()> {
+pub async fn set_local(config: &Config) -> Result<()> {
     let wallpaper_path = select_local_wallpaper(config)?;
     info!("Selected local wallpaper: {}", wallpaper_path.display());
 
@@ -16,38 +19,69 @@ pub async fn set_local(config: &Config, _category: Option<&str>) -> Result<()> {
     Ok(())
 }
 
+#[derive(Deserialize)]
+struct WallHavenImage {
+    path: String
+}
+
+/// Download the actual url
+pub async fn get_url_content_as_json(url: &str) -> Result<String> {
+    let client = Client::new();
+    let response = client.get(url).send().await?;
+
+    if !response.status().is_success() {
+        return Err(anyhow!("Request failed: {}", response.status()));
+    }
+
+    let wallhaven_images: Vec<WallHavenImage> = response.json().await?;
+    Ok(wallhaven_images[0].path.clone())
+}
+
+pub async fn save_url_content_to_file(url: &str, file_name: &str) -> Result<()> {
+    let client = Client::new();
+    let response = client.get(url).send().await?;
+
+    if !response.status().is_success() {
+        return Err(anyhow!("Request failed: {}", response.status()));
+    }
+
+    let bytes = response.bytes().await?;
+    let mut file = File::create(file_name)?;
+    let mut content = Cursor::new(bytes);
+    io::copy(&mut content, &mut file)?;
+
+    Ok(())
+}
+
+pub fn make_file_suffix() -> String {
+    Local::now().format("%Y%m%d_%H%M%S").to_string()
+}
+
 /// Download and set wallpaper from Wallhaven (placeholder)
 pub async fn set_wallhaven(config: &Config, category: &str) -> Result<()> {
-    info!("🚧 Wallhaven download - Learning opportunity!");
-    info!("📚 See bin/wallflow-reference for URL examples");
-    info!("🔗 Category: {}, Resolution: auto-detect", category);
+    let resolution = config.get_wallhaven_resolution()?;
+    let api_url = format!("https://wallhaven.cc/api/v1/search?q={category}&categories=100&purity=100&resolutions={}&sorting=random", resolution.as_string());
 
-    // TODO: Implement Wallhaven API integration
-    // 1. Get resolution from config.get_wallhaven_resolution()?
-    // 2. Build API URL (see bin/wallflow-reference for examples)
-    // 3. Make HTTP request with reqwest
-    // 4. Parse JSON response to get wallpaper URL
-    // 5. Download image file to downloads directory
-    // 6. Call apply_wallpaper() with downloaded file
+    let image_url = get_url_content_as_json(&api_url).await?;
+    let suffix = make_file_suffix();
+    let filename = format!("{}/wallhaven_{category}_{suffix}.jpg", config.paths.downloads);
 
-    info!("💡 Use 'wallflow local' for now, or implement the download yourself!");
-    Err(anyhow!("Wallhaven download not yet implemented - learning exercise!"))
+    save_url_content_to_file(&image_url, &filename).await?;
+    apply_wallpaper(Path::new(&filename), config).await?;
+    Ok(())
 }
 
 /// Download random photo from Picsum (placeholder)
 pub async fn set_picsum(config: &Config) -> Result<()> {
-    info!("🚧 Picsum download - Learning opportunity!");
-    info!("📚 See bin/wallflow-reference for URL examples");
+    let r = config.get_picsum_resolution()?;
 
-    // TODO: Implement Picsum API integration
-    // 1. Get resolution from config.get_picsum_resolution()?
-    // 2. Build Picsum URL (very simple: https://picsum.photos/WIDTH/HEIGHT?random)
-    // 3. Download image with reqwest (follows redirects automatically)
-    // 4. Save to downloads directory with timestamp filename
-    // 5. Call apply_wallpaper() with downloaded file
+    let image_content_url = format!("https://picsum.photos/{}/{}?random", r.width, r.height);
+    let suffix = make_file_suffix();
+    let filename = format!("{}/picsum_{}.jpg", config.paths.downloads, suffix);
 
-    info!("💡 Use 'wallflow local' for now, or implement the download yourself!");
-    Err(anyhow!("Picsum download not yet implemented - learning exercise!"))
+    save_url_content_to_file(&image_content_url, &filename).await?;
+    apply_wallpaper(Path::new(&filename), config).await?;
+    Ok(())
 }
 
 /// Select random wallpaper from local collection
@@ -233,8 +267,3 @@ async fn notify_app_color_change(app: &str) {
     }
 }
 
-/// Check if a command exists in PATH
-fn which(command: &str) -> Result<PathBuf> {
-    which::which(command)
-        .with_context(|| format!("Command '{}' not found in PATH", command))
-}
