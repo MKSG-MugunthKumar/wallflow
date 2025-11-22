@@ -1,0 +1,26 @@
+#!/bin/bash
+# Post-installation script for wallflow
+
+set -e
+
+case "$1" in
+    configure)
+        # Create default config directory if it doesn't exist
+        if [ ! -d "/etc/wallflow" ]; then
+            mkdir -p /etc/wallflow
+            chmod 755 /etc/wallflow
+        fi
+
+        # Copy example config if no config exists
+        if [ ! -f "/etc/wallflow/config.yml" ] && [ -f "/usr/share/doc/wallflow/config.example.yml" ]; then
+            cp /usr/share/doc/wallflow/config.example.yml /etc/wallflow/config.yml
+            chmod 644 /etc/wallflow/config.yml
+        fi
+
+        echo "🌊 wallflow installed successfully!"
+        echo "Example config: /etc/wallflow/config.yml"
+        echo "Run 'wallflow examples' for usage examples"
+        ;;
+esac
+
+exit 0

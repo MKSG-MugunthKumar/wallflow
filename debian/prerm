@@ -1,0 +1,18 @@
+#!/bin/bash
+# Pre-removal script for wallflow
+
+set -e
+
+case "$1" in
+    remove)
+        # Stop any running wallflow daemons
+        pkill -f "wallflow daemon" || true
+
+        # Clean up any PID files
+        rm -f /home/*/.local/share/wallflow/wallflow.pid || true
+
+        echo "🌊 wallflow daemon stopped"
+        ;;
+esac
+
+exit 0

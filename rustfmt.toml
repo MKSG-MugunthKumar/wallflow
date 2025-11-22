@@ -1,0 +1,29 @@
+# rustfmt configuration for wallflow - 2-space indentation style
+
+# Line width
+max_width = 150
+
+# Use 2 spaces for indentation instead of tabs
+hard_tabs = false
+tab_spaces = 2
+
+# Use field init shorthand where possible (stable)
+use_field_init_shorthand = true
+
+# Edition compatibility
+edition = "2021"
+
+# NOTE: Many advanced features require nightly rust
+# To enable them, install nightly: rustup toolchain install nightly
+# Then use: cargo +nightly fmt
+#
+# Advanced features (commented out for stable compatibility):
+# group_imports = "StdExternalCrate"
+# imports_granularity = "Crate"
+# trailing_comma = "Vertical"
+# format_strings = true
+# format_code_in_doc_comments = true
+# control_brace_style = "AlwaysSameLine"
+# comment_width = 80
+# wrap_comments = true
+

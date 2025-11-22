@@ -1,0 +1,17 @@
+name: Release
+on:
+  release:
+    types: [published]
+jobs:
+  dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Install cargo-dist
+        run: cargo install cargo-dist
+      - name: Build distributions
+        run: cargo dist build --tag=${{ github.ref_name }}
+      - name: Upload binaries
+        run: cargo dist upload --tag=${{ github.ref_name }}
