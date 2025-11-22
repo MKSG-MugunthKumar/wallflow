@@ -105,19 +105,19 @@ async fn main() -> Result<()> {
     }
     Commands::Examples => {
       println!("🌊 wallflow Usage Examples");
-      println!("");
+      println!();
       println!("  # Set wallpaper from local collection");
       println!("  wallflow local");
-      println!("");
+      println!();
       println!("  # Start daemon (background)");
       println!("  wallflow daemon");
-      println!("");
+      println!();
       println!("  # Start daemon (foreground for testing)");
       println!("  wallflow daemon --foreground");
-      println!("");
+      println!();
       println!("  # Download from Wallhaven");
       println!("  wallflow wallhaven nature");
-      println!("");
+      println!();
       println!("  # Add to your shell startup script for auto-start:");
       println!("  echo 'wallflow daemon &' >> ~/.zshrc");
     }

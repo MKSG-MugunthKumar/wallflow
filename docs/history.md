@@ -14,11 +14,12 @@ This document chronicles how wallflow evolved from a complex bash script to an e
 - **Mixed responsibilities** across multiple scripts
 - **No type safety** leading to runtime errors
 
-> *"IT LOOKED LIKE PERL AND GAVE ME A MINI PTSD"* - The moment we knew it was time for a rewrite
+> _"IT LOOKED LIKE PERL AND GAVE ME A MINI PTSD"_ - The moment we knew it was time for a rewrite
 
 ## 🔍 The Investigation
 
 **Terminal Corruption Debugging**:
+
 ```bash
 # Problem: Garbled notifications and escape sequences
 # Root cause: ls alias to eza --hyperlink + pywal escape sequences
@@ -26,6 +27,7 @@ This document chronicles how wallflow evolved from a complex bash script to an e
 ```
 
 **AWK YAML Parser Horror**:
+
 ```bash
 # Original: 65 lines of complex AWK parsing
 parse_yaml() {
@@ -52,6 +54,7 @@ let config: Config = serde_yaml::from_str(&contents)?;
 Instead of implementing everything immediately, we created learning opportunities with detailed TODO comments and reference examples.
 
 **Learning Path Creation**:
+
 - [docs/learning-path.md](learning-path.md) - 8-week structured Rust learning journey
 - [docs/explore.md](explore.md) - Real-world Rust ecosystem examples
 - [bin/wallflow-reference](../bin/wallflow-reference) - Clean URL construction examples
@@ -60,18 +63,19 @@ Instead of implementing everything immediately, we created learning opportunitie
 
 **Eliminated Pain Points**:
 
-| Before (Bash) | After (Rust) |
-|---------------|--------------|
-| 65-line AWK parser | 2-line serde parsing |
+| Before (Bash)              | After (Rust)          |
+| -------------------------- | --------------------- |
+| 65-line AWK parser         | 2-line serde parsing  |
 | systemd + timer complexity | Built-in tokio daemon |
-| Hardcoded resolutions | Auto-detection |
-| Runtime errors | Compile-time safety |
-| Multiple script files | Single binary |
-| Shell escape hell | Type-safe execution |
+| Hardcoded resolutions      | Auto-detection        |
+| Runtime errors             | Compile-time safety   |
+| Multiple script files      | Single binary         |
+| Shell escape hell          | Type-safe execution   |
 
 ## 🌟 Philosophy: Learning Through Building
 
 **Core Principles**:
+
 1. **Education Over Implementation** - TODOs as learning opportunities
 2. **Incremental Complexity** - Start simple, add features as you learn
 3. **Real-World Utility** - Build something you'll actually use
@@ -87,4 +91,4 @@ The transformation from "god-awful AWK parsing" to elegant Rust demonstrates how
 
 ---
 
-*Evolution from shell scripts to systems programming* 🐚➡️🦀
+_Evolution from shell scripts to systems programming_ 🐚➡️🦀

@@ -401,6 +401,6 @@ async fn download_multiple_wallpapers(urls: Vec<String>) -> Result<Vec<PathBuf>>
 
 ---
 
-*"The best way to learn Rust is to build something you'll actually use"* 🦀
+_"The best way to learn Rust is to build something you'll actually use"_ 🦀
 
 **Happy coding!** Feel free to ask questions, share progress, or request help with specific concepts as you work through this learning path.

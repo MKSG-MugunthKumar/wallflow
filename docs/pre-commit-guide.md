@@ -1,20 +1,7 @@
 # Pre-commit Guide for wallflow
 
-## 🪝 Pre-commit for Rust vs Python
-
-Coming from Python, here's how Rust pre-commit hooks compare:
-
-| Python Tool | Rust Equivalent | Purpose |
-|-------------|-----------------|---------|
-| `black` | `rustfmt` | Code formatting |
-| `flake8`/`pylint` | `clippy` | Linting & code analysis |
-| `isort` | Built into `rustfmt` | Import organization |
-| `bandit` | `cargo-audit` | Security scanning |
-| `mypy` | Built into `rustc` | Type checking (compile-time) |
-
-## 🔧 What's Configured
-
 ### Core Rust Tools
+
 ```yaml
 - rustfmt: Formats code according to Rust style guide
 - clippy: Catches bugs, performance issues, and style violations
@@ -22,6 +9,7 @@ Coming from Python, here's how Rust pre-commit hooks compare:
 ```
 
 ### General Quality
+
 ```yaml
 - YAML/TOML validation: Config file correctness
 - Markdown linting: Documentation quality
@@ -30,6 +18,7 @@ Coming from Python, here's how Rust pre-commit hooks compare:
 ```
 
 ### Custom Checks
+
 ```yaml
 - No debug prints: Catches leftover println!/dbg! statements
 - TODO detection: Flags TODO/FIXME comments (optional)
@@ -39,6 +28,7 @@ Coming from Python, here's how Rust pre-commit hooks compare:
 ## 🚀 Installation & Usage
 
 ### Setup (One-time)
+
 ```bash
 # Automated installation
 ./scripts/setup-pre-commit.sh
@@ -50,6 +40,7 @@ pre-commit install --hook-type commit-msg
 ```
 
 ### Daily Usage
+
 ```bash
 # Automatic (runs on git commit)
 git add .
@@ -63,6 +54,7 @@ pre-commit autoupdate
 ```
 
 ### Emergency Override
+
 ```bash
 # Skip hooks in emergency (use sparingly!)
 git commit --no-verify -m "hotfix: critical bug"
@@ -71,6 +63,7 @@ git commit --no-verify -m "hotfix: critical bug"
 ## 🎯 Hook Categories
 
 ### **Always Enabled (Critical)**
+
 - `rustfmt` - Code formatting consistency
 - `clippy` - Bug prevention and style
 - `cargo-audit` - Security vulnerabilities
@@ -78,11 +71,13 @@ git commit --no-verify -m "hotfix: critical bug"
 - `check-yaml` - Config file validity
 
 ### **Quality of Life**
+
 - `markdownlint` - Documentation quality
 - `shellcheck` - Script safety
 - `conventional-pre-commit` - Consistent commit messages
 
 ### **Strict Mode (Optional)**
+
 ```yaml
 # Uncomment in .pre-commit-config.yaml to enable:
 - no-debug-prints: Prevents debugging code in commits
@@ -93,13 +88,16 @@ git commit --no-verify -m "hotfix: critical bug"
 ## 🔧 Customization
 
 ### Adjust Rustfmt Rules
+
 Edit `rustfmt.toml`:
+
 ```toml
 max_width = 150  # Match your preference
 tab_spaces = 2   # Your current 2-space setup
 ```
 
 ### Skip Specific Hooks
+
 ```bash
 # Skip clippy for this commit (not recommended)
 SKIP=clippy git commit -m "wip: work in progress"
@@ -111,22 +109,25 @@ SKIP=clippy,cargo-audit git commit -m "draft changes"
 ### Configure Hook Behavior
 
 **Make TODOs non-blocking:**
+
 ```yaml
 # In .pre-commit-config.yaml, add:
 - id: check-todos
   name: Check for TODOs (warning only)
-  entry: 'grep -r "TODO\|FIXME" src/ || true'  # Always pass
+  entry: 'grep -r "TODO\|FIXME" src/ || true' # Always pass
 ```
 
 **Adjust Clippy strictness:**
+
 ```yaml
 - id: clippy
-  entry: cargo clippy --all-targets --all-features -- -W warnings  # Warnings instead of errors
+  entry: cargo clippy --all-targets --all-features -- -W warnings # Warnings instead of errors
 ```
 
 ## 🎨 Integration with IDEs
 
 ### VS Code
+
 ```json
 // settings.json
 {
@@ -139,11 +140,13 @@ SKIP=clippy,cargo-audit git commit -m "draft changes"
 ```
 
 ### Neovim/Vim
+
 Pre-commit hooks complement rust-analyzer LSP integration.
 
 ## 🚦 CI/CD Integration
 
 The hooks also run in GitHub Actions:
+
 ```yaml
 # .github/workflows/ci.yml includes:
 - name: Run pre-commit
@@ -155,6 +158,7 @@ The hooks also run in GitHub Actions:
 ### Common Issues
 
 **Hook installation fails:**
+
 ```bash
 # Update pre-commit itself
 pip install --upgrade pre-commit
@@ -164,6 +168,7 @@ pre-commit clean && pre-commit install
 ```
 
 **Clippy fails with complex errors:**
+
 ```bash
 # Run clippy standalone to see full errors
 cargo clippy --all-targets --all-features
@@ -172,6 +177,7 @@ cargo clippy --all-targets --all-features
 ```
 
 **Formatting conflicts:**
+
 ```bash
 # Run rustfmt to see what it wants to change
 cargo fmt --check
@@ -181,6 +187,7 @@ cargo fmt
 ```
 
 **Commit message format:**
+
 ```bash
 # Use conventional commit format:
 git commit -m "feat: add new wallpaper source"

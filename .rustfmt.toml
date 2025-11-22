@@ -26,4 +26,3 @@ edition = "2021"
 # control_brace_style = "AlwaysSameLine"
 # comment_width = 80
 # wrap_comments = true
-

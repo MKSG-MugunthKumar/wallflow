@@ -22,13 +22,12 @@ pub async fn run_foreground(config: Config) -> Result<()> {
   });
 
   // Initial delay if configured
-  if let Some(start_delay) = &config.timer.start_delay {
-    if let Ok(delay_secs) = parse_duration(start_delay) {
-      if delay_secs > 0 {
-        info!("Waiting {}s before starting...", delay_secs);
-        sleep(Duration::from_secs(delay_secs)).await;
-      }
-    }
+  if let Some(start_delay) = &config.timer.start_delay
+    && let Ok(delay_secs) = parse_duration(start_delay)
+    && delay_secs > 0
+  {
+    info!("Waiting {}s before starting...", delay_secs);
+    sleep(Duration::from_secs(delay_secs)).await;
   }
 
   // Set initial wallpaper

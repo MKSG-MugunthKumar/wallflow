@@ -18,11 +18,13 @@ wallflow is a Rust-based wallpaper management tool that serves as a structured l
 ## 📚 Learning Framework
 
 **Educational Structure**:
+
 - [docs/learning-path.md](docs/learning-path.md) - 8-week structured learning journey
 - [docs/explore.md](docs/explore.md) - Real-world Rust ecosystem tour
 - [bin/wallflow-reference](bin/wallflow-reference) - HTTP API construction examples
 
 **Learning TODOs**: Key features are left as educational exercises with detailed implementation guidance:
+
 ```rust
 // Example: HTTP integration as learning opportunity
 pub async fn set_wallhaven(config: &Config, category: &str) -> Result<()> {
@@ -74,6 +76,7 @@ The project will evolve into a full TUI wallpaper manager with:
 - **Plugin system** - Extensible wallpaper sources and transition effects
 
 **TUI Implementation Path**:
+
 1. **Phase 1**: Basic ratatui interface (weeks 5-6 in learning path)
 2. **Phase 2**: Vim bindings and navigation (weeks 7-8)
 3. **Phase 3**: Advanced features (ongoing learning)
@@ -114,16 +117,19 @@ wallflow/
 ## 🎓 Learning Goals
 
 **Week 1-4**: Foundation
+
 - Rust fundamentals through config and CLI development
 - Async programming with tokio daemon
 - HTTP client implementation (educational exercises)
 
 **Week 5-8**: Advanced
+
 - TUI development with ratatui
 - Complex state management
 - Performance optimization and cross-platform support
 
 **Beyond**: Choose your adventure
+
 - Plugin architecture
 - Web API development
 - Machine learning integration
@@ -141,6 +147,6 @@ cat docs/learning-path.md
 
 ---
 
-*Learning Rust through building something useful* 🦀
+_Learning Rust through building something useful_ 🦀
 
 **Migration history**: [docs/history.md](docs/history.md)

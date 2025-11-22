@@ -17,6 +17,7 @@
 ## 🚀 Quick Start
 
 **Current (Bash) Version:**
+
 ```bash
 # Set a wallpaper manually
 ./bin/wallflow local
@@ -26,6 +27,7 @@
 ```
 
 **New (Rust) Version:**
+
 ```bash
 # Build and run
 cargo build --release
@@ -86,10 +88,11 @@ cargo run -- daemon --foreground
 ## 🤝 Contributing
 
 This project serves as both a useful tool and a Rust learning experience. Feel free to:
+
 - Try the Rust rewrite and provide feedback
 - Suggest improvements or features
 - Share your own learning journey
 
 ---
 
-*"Evolution from shell scripts to systems programming"* 🐚➡️🦀
+_"Evolution from shell scripts to systems programming"_ 🐚➡️🦀

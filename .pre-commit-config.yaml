@@ -36,10 +36,11 @@ repos:
       - id: clippy
         name: Rust linting (clippy)
         description: Run clippy to lint Rust code
-        entry: cargo clippy --all-targets --all-features -- -D warnings
+        entry: cargo clippy --all-targets --all-features
         language: system
         files: \.rs$
         pass_filenames: false
+        args: ['--', '-D', 'warnings']
 
   # Security scanning (equivalent to bandit for Python)
   - repo: local
@@ -60,13 +61,22 @@ repos:
         name: YAML linting
         args: [-c=.yamllint.yml]
 
-  # Markdown linting and formatting
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.41.0
+  # Markdown auto-formatting (like rustfmt for Rust!)
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
     hooks:
-      - id: markdownlint
-        name: Markdown linting
-        args: ['--config', '.markdownlint.json']
+      - id: prettier
+        name: Markdown auto-formatting
+        types: [markdown]
+        args: ['--write', '--prose-wrap', 'preserve', '--print-width', '9999']
+
+  # Optional: Markdown linting after formatting (uncomment if desired)
+  # - repo: https://github.com/igorshubovych/markdownlint-cli
+  #   rev: v0.41.0
+  #   hooks:
+  #     - id: markdownlint
+  #       name: Markdown linting
+  #       args: ['--config', '.markdownlint.json', '--fix']
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py

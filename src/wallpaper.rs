@@ -26,8 +26,11 @@ struct WallhavenResponse {
 
 #[derive(Deserialize)]
 struct WallhavenImage {
+  #[allow(dead_code)]
   id: String,
+  #[allow(dead_code)]
   url: String,
+  #[allow(dead_code)]
   short_url: String,
   path: String,
 }
@@ -138,10 +141,10 @@ fn collect_wallpapers(dir: &Path, formats: &[String], wallpapers: &mut Vec<PathB
     let path = entry.path();
 
     if path.is_file() {
-      if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
-        if formats.iter().any(|fmt| fmt.eq_ignore_ascii_case(extension)) {
-          wallpapers.push(path);
-        }
+      if let Some(extension) = path.extension().and_then(|ext| ext.to_str())
+        && formats.iter().any(|fmt| fmt.eq_ignore_ascii_case(extension))
+      {
+        wallpapers.push(path);
       }
     } else if path.is_dir() && recursive {
       collect_wallpapers(&path, formats, wallpapers, recursive)?;
@@ -215,7 +218,7 @@ async fn set_wallpaper_awww(wallpaper_path: &Path, transition: &str, config: &Co
 
 /// Set KDE wallpaper for panel inheritance
 async fn set_wallpaper_kde(wallpaper_path: &Path) {
-  if let Ok(_) = which::which("plasma-apply-wallpaperimage") {
+  if which::which("plasma-apply-wallpaperimage").is_ok() {
     debug!("Setting KDE wallpaper for panel inheritance");
 
     let output = AsyncCommand::new("plasma-apply-wallpaperimage").arg(wallpaper_path).output().await;
