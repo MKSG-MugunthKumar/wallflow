@@ -42,8 +42,7 @@ repos:
         pass_filenames: false
 
   # Security scanning (equivalent to bandit for Python)
-  - repo: https://github.com/trailofbits/audit-rs
-    rev: v0.20.1
+  - repo: local
     hooks:
       - id: cargo-audit
         name: Rust security audit
