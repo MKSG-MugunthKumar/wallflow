@@ -6,73 +6,6 @@ A curated tour of amazing CLI tools, TUI applications, and libraries built with 
 
 ### **File & Search Tools**
 
-**[ripgrep (rg)](https://github.com/BurntSushi/ripgrep)**
-
-```bash
-# Blazingly fast text search - often 10x faster than grep
-rg "TODO" --type rust
-rg "function.*export" -A 3 -B 1
-```
-
-- **What it teaches**: High-performance text processing, regex engines
-- **Key libraries**: `regex`, `walkdir`, `clap`
-- **Performance**: Written by Andrew Gallant, a master of optimization
-
-**[fd](https://github.com/sharkdp/fd)**
-
-```bash
-# Modern replacement for find - faster and more intuitive
-fd "wallpaper" --type f --extension jpg
-fd --hidden --no-ignore "config" /home
-```
-
-- **What it teaches**: File system traversal, parallel processing
-- **Key libraries**: `walkdir`, `regex`, `colored`
-
-**[bat](https://github.com/sharkdp/bat)**
-
-```bash
-# cat with superpowers - syntax highlighting and git integration
-bat src/main.rs
-bat --style=numbers,changes --color=always README.md | less
-```
-
-- **What it teaches**: Syntax highlighting, terminal output, plugin systems
-- **Key libraries**: `syntect`, `console`, `clap`
-
-### **System Monitoring**
-
-**[bottom (btm)](https://github.com/ClementTsang/bottom)**
-
-```bash
-# Cross-platform system monitor - better than htop
-btm --color=gruvbox --rate 1000
-```
-
-- **What it teaches**: TUI programming, system APIs, data visualization
-- **Key libraries**: `ratatui`, `sysinfo`, `tokio`
-
-**[bandwhich](https://github.com/imsnif/bandwhich)**
-
-```bash
-# Real-time network monitoring by process
-sudo bandwhich
-```
-
-- **What it teaches**: Network programming, system-level access, real-time data
-- **Key libraries**: `pnet`, `ratatui`, `tokio`
-
-**[procs](https://github.com/dalance/procs)**
-
-```bash
-# Modern ps replacement with better formatting
-procs --tree
-procs firefox --watch
-```
-
-- **What it teaches**: Process management, system APIs, table formatting
-- **Key libraries**: `sysinfo`, `tabled`, `colored`
-
 ## 🖥️ TUI Applications
 
 ### **Development Tools**
@@ -88,24 +21,6 @@ gitui
 - **Key libraries**: `ratatui`, `git2`, `crossterm`
 - **Features**: Fast rendering, intuitive navigation, comprehensive git operations
 
-**[lazygit](https://github.com/jesseduffield/lazygit)** (Go, but inspiring)
-
-- Shows what a great git TUI looks like
-- Has influenced many Rust TUI designs
-
-### **Media & Entertainment**
-
-**[spotify-tui](https://github.com/Rigellute/spotify-tui)**
-
-```bash
-# Control Spotify from terminal with vim bindings
-spt
-```
-
-- **What it teaches**: API integration, audio/media handling, responsive UI
-- **Key libraries**: `ratatui`, `reqwest`, `tokio`
-- **Features**: Real-time updates, playlist management, search
-
 **[termusic](https://github.com/tramhao/termusic)**
 
 ```bash
@@ -116,17 +31,6 @@ termusic
 - **What it teaches**: Audio processing, file format handling, complex state management
 
 ### **Productivity**
-
-**[zellij](https://github.com/zellij-org/zellij)**
-
-```bash
-# Terminal workspace manager (tmux alternative)
-zellij
-```
-
-- **What it teaches**: Terminal multiplexing, plugin systems, IPC
-- **Key libraries**: `ratatui`, `wasmer` (for WASM plugins), `tokio`
-- **Features**: Tiling layouts, session management, plugin ecosystem
 
 **[atuin](https://github.com/atuinsh/atuin)**
 
@@ -164,7 +68,17 @@ hurl --test api-tests.hurl
 
 ### **Servers & Services**
 
-**[miniserve](https://github.com/svenstaro/miniserve)**
+**[procs](https://github.com/dalance/procs)**
+
+```bash
+# Modern ps replacement with better formatting
+procs --tree
+procs firefox --watch
+```
+
+- **What it teaches**: Process management, system APIs, table formatting
+- **Key libraries**: `sysinfo`, `tabled`, `colored`
+  **[miniserve](https://github.com/svenstaro/miniserve)**
 
 ```bash
 # Quick file sharing server

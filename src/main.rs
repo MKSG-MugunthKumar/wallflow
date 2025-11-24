@@ -6,6 +6,7 @@ mod config;
 mod daemon;
 mod display;
 mod wallpaper;
+mod platform;
 
 use config::Config;
 
@@ -51,6 +52,17 @@ enum Commands {
   Config,
   /// Show usage examples and setup guide
   Examples,
+  /// Show platform information and available backends
+  PlatformInfo,
+  /// List all available wallpaper backends
+  ListBackends,
+  /// Test a specific wallpaper backend
+  TestBackend {
+    /// Backend name to test
+    backend: String,
+    /// Path to test image (optional, uses default if not provided)
+    image: Option<std::path::PathBuf>,
+  },
 }
 
 #[tokio::main]
@@ -105,10 +117,10 @@ async fn main() -> Result<()> {
     }
     Commands::Examples => {
       println!("🌊 wallflow Usage Examples");
-      println!();
+      println!("");
       println!("  # Set wallpaper from local collection");
       println!("  wallflow local");
-      println!();
+      println!("");
       println!("  # Start daemon (background)");
       println!("  wallflow daemon");
       println!();
@@ -118,13 +130,73 @@ async fn main() -> Result<()> {
       println!("  # Download from Wallhaven");
       println!("  wallflow wallhaven nature");
       println!();
+      println!("  # Check platform and backends");
+      println!("  wallflow platform-info");
+      println!("  wallflow list-backends");
+      println!();
+      println!("  # Test a specific backend");
+      println!("  wallflow test-backend swww");
+      println!();
       println!("  # Add to your shell startup script for auto-start:");
       println!("  echo 'wallflow daemon &' >> ~/.zshrc");
+    }
+    Commands::PlatformInfo => {
+      let info = wallpaper::platform_info()?;
+      println!("🌊 wallflow Platform Information");
+      println!();
+      println!("{}", info);
+    }
+    Commands::ListBackends => {
+      let backends = wallpaper::list_backends();
+      println!("🌊 wallflow Available Backends");
+      println!();
+      for backend in backends {
+        println!("  {}", backend);
+      }
+    }
+    Commands::TestBackend { backend, image } => {
+      let test_image = if let Some(img) = image {
+        img
+      } else {
+        // Use a default test image or the first local wallpaper
+        get_default_test_image(&config)?
+      };
+
+      info!("Testing backend '{}' with image: {}", backend, test_image.display());
+      wallpaper::test_backend(&backend, &test_image, &config).await?;
     }
   }
 
   info!("✨ wallflow completed successfully");
   Ok(())
+}
+
+fn get_default_test_image(config: &Config) -> Result<std::path::PathBuf> {
+  use std::path::Path;
+
+  // Try to find the first image in the local wallpaper directory
+  let wallpaper_dir = Path::new(&config.paths.local);
+
+  if wallpaper_dir.exists() {
+    for entry in std::fs::read_dir(wallpaper_dir)? {
+      let entry = entry?;
+      let path = entry.path();
+
+      if path.is_file() {
+        if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
+          if config.sources.local.formats.iter().any(|fmt| fmt.eq_ignore_ascii_case(extension)) {
+            return Ok(path);
+          }
+        }
+      }
+    }
+  }
+
+  // If no local images found, suggest creating a test image
+  Err(anyhow::anyhow!(
+    "No test images found in {}. Please provide a test image path or add images to your local wallpaper directory.",
+    wallpaper_dir.display()
+  ))
 }
 
 fn show_config(config: &Config) -> Result<()> {

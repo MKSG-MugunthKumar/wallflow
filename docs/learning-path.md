@@ -93,57 +93,7 @@ RUST_LOG=debug cargo run -- config
 
 **Project Tasks:**
 
-1. **Implement Wallhaven API** (see `bin/wallflow-reference` for URLs):
-
-```rust
-// In src/wallpaper.rs
-pub async fn download_wallhaven(category: &str, resolution: &Resolution) -> Result<PathBuf> {
-    let client = reqwest::Client::new();
-    let url = format!("https://wallhaven.cc/api/v1/search?q={}&categories=100&purity=100&resolutions={}",
-        category, resolution.as_string());
-
-    let response: WallhavenResponse = client
-        .get(&url)
-        .send()
-        .await?
-        .json()
-        .await?;
-
-    // Download the actual image...
-    todo!("Implement image download")
-}
-```
-
-2. **Add Picsum integration**:
-
-```rust
-pub async fn download_picsum(resolution: &Resolution) -> Result<PathBuf> {
-    let url = format!("https://picsum.photos/{}/{}?random",
-        resolution.width, resolution.height);
-    // Implement download...
-}
-```
-
-**Key Learning:**
-
-- `async`/`await` syntax
-- HTTP clients and JSON parsing
-- File I/O and path handling
-- Error handling in async contexts
-
-### **System Integration & Process Management**
-
-**Project Tasks:**
-
-1. **Wire up display detection**:
-
-```rust
-// Use the display.rs functions in wallpaper.rs
-let resolution = config.get_wallhaven_resolution()?;
-download_wallhaven(category, &resolution).await?;
-```
-
-2. **Improve daemon mode**:
+1. **Improve daemon mode**:
 
 ```rust
 // Add graceful shutdown
@@ -159,7 +109,7 @@ async fn setup_signal_handlers() {
 }
 ```
 
-3. **Add daemon status checking**:
+2. **Add daemon status checking**:
 
 ```bash
 # New command to implement

@@ -28,7 +28,7 @@ wallflow is a Rust-based wallpaper management tool that serves as a structured l
 ```rust
 // Example: HTTP integration as learning opportunity
 pub async fn set_wallhaven(config: &Config, category: &str) -> Result<()> {
-    // TODO: Implement Wallhaven API integration
+    // Implement Wallhaven API integration
     // 1. Get resolution from config.get_wallhaven_resolution()?
     // 2. Build API URL (see bin/wallflow-reference for examples)
     // 3. Make HTTP request with reqwest
@@ -88,30 +88,9 @@ The project will evolve into a full TUI wallpaper manager with:
 cargo run -- config              # Show configuration
 cargo run -- local              # Set local wallpaper
 
-# Built-in daemon (no systemd!)
+# Built-in daemon
 cargo run -- daemon --foreground
 
-# Learning exercises (placeholders ready for implementation)
-cargo run -- wallhaven nature   # TODO: Implement HTTP download
-cargo run -- picsum             # TODO: Implement random photos
-```
-
-## 🗂️ Project Structure
-
-```
-wallflow/
-├── src/
-│   ├── main.rs      # CLI interface and command routing
-│   ├── config.rs    # Type-safe YAML configuration
-│   ├── daemon.rs    # Built-in scheduling daemon
-│   ├── display.rs   # Auto-resolution detection
-│   └── wallpaper.rs # Core wallpaper management + learning TODOs
-├── docs/
-│   ├── learning-path.md # 8-week structured journey
-│   ├── explore.md      # Rust ecosystem examples
-│   └── history.md      # Migration story
-├── bin/wallflow-reference # HTTP API examples for learning
-└── config.example.yml    # Configuration template
 ```
 
 ## 🎓 Learning Goals
