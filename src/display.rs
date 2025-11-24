@@ -4,11 +4,13 @@ use tracing::{debug, warn};
 
 /// Display resolution information
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Resolution {
   pub width: u32,
   pub height: u32,
 }
 
+#[allow(dead_code)]
 impl Resolution {
   pub fn new(width: u32, height: u32) -> Self {
     Self { width, height }
@@ -40,6 +42,7 @@ impl Default for Resolution {
 }
 
 /// Get the resolution of the primary display
+#[allow(dead_code)]
 pub fn get_primary_display_resolution() -> Result<Resolution> {
   // Try different detection methods based on available tools
 
@@ -72,6 +75,7 @@ pub fn get_primary_display_resolution() -> Result<Resolution> {
 }
 
 /// Detect resolution using xrandr (X11)
+#[allow(dead_code)]
 fn detect_resolution_xrandr() -> Result<Resolution> {
   let output = Command::new("xrandr").arg("--current").output().context("Failed to execute xrandr")?;
 
@@ -102,6 +106,7 @@ fn detect_resolution_xrandr() -> Result<Resolution> {
 }
 
 /// Detect resolution using swaymsg (Sway)
+#[allow(dead_code)]
 fn detect_resolution_sway() -> Result<Resolution> {
   let output = Command::new("swaymsg")
     .args(["-t", "get_outputs"])
@@ -134,6 +139,7 @@ fn detect_resolution_sway() -> Result<Resolution> {
 }
 
 /// Detect resolution using wlr-randr (wlroots)
+#[allow(dead_code)]
 fn detect_resolution_wlr_randr() -> Result<Resolution> {
   let output = Command::new("wlr-randr").output().context("Failed to execute wlr-randr")?;
 
@@ -160,6 +166,7 @@ fn detect_resolution_wlr_randr() -> Result<Resolution> {
 }
 
 /// Detect resolution using kscreen-doctor (KDE)
+#[allow(dead_code)]
 fn detect_resolution_kscreen() -> Result<Resolution> {
   let output = Command::new("kscreen-doctor")
     .arg("-j")

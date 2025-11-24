@@ -207,6 +207,7 @@ impl Config {
   }
 
   /// Get wallhaven resolution (from config or auto-detect)
+  #[allow(dead_code)]
   pub fn get_wallhaven_resolution(&self) -> Result<crate::display::Resolution> {
     match &self.sources.wallhaven.resolution {
       Some(res_str) => crate::display::Resolution::from_string(res_str),
@@ -215,6 +216,7 @@ impl Config {
   }
 
   /// Get picsum resolution (from config or auto-detect)
+  #[allow(dead_code)]
   pub fn get_picsum_resolution(&self) -> Result<crate::display::Resolution> {
     match (self.sources.picsum.width, self.sources.picsum.height) {
       (Some(w), Some(h)) => Ok(crate::display::Resolution::new(w, h)),
@@ -268,3 +270,6 @@ fn expand_path(path: &str) -> Result<String> {
   let expanded = shellexpand::full(path).with_context(|| format!("Failed to expand path: {}", path))?;
   Ok(expanded.to_string())
 }
+
+#[cfg(test)]
+mod tests;

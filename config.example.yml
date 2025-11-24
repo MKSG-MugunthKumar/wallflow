@@ -54,6 +54,7 @@ integration:
 logging:
   enabled: true
   level: "info"           # debug, info, warn, error
+  file: "${HOME}/.local/share/wallflow/wallflow.log"  # Optional file output
   timestamp: true
 
 # Advanced settings

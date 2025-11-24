@@ -4,9 +4,13 @@ use tracing::info;
 
 mod config;
 mod daemon;
+mod daemon_status;
 mod display;
-mod wallpaper;
+mod downloaders;
+mod logging;
 mod platform;
+mod tui;
+mod wallpaper;
 
 use config::Config;
 
@@ -42,6 +46,8 @@ enum Commands {
   },
   /// Set random photo from Picsum
   Picsum,
+  /// Download NASA Astronomy Picture of the Day
+  Apod,
   /// Run as background daemon with automatic rotation
   Daemon {
     /// Run in foreground (don't daemonize)
@@ -63,20 +69,17 @@ enum Commands {
     /// Path to test image (optional, uses default if not provided)
     image: Option<std::path::PathBuf>,
   },
+  /// List all available wallpaper sources
+  ListSources,
+  /// Launch interactive TUI for wallpaper browsing
+  Tui,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
   let cli = Cli::parse();
 
-  // Initialize logging
-  let log_level = if cli.verbose { "debug" } else { "info" };
-  tracing_subscriber::fmt()
-    .with_env_filter(format!("wallflow={}", log_level))
-    .with_target(false)
-    .init();
-
-  // Load configuration (goodbye AWK nightmare!)
+  // Load configuration first (needed for logging setup)
   let mut config = if let Some(config_path) = cli.config {
     Config::load(&config_path)?
   } else {
@@ -86,7 +89,11 @@ async fn main() -> Result<()> {
   // Expand environment variables in paths
   config.expand_paths()?;
 
-  info!("🌊 wallflow starting");
+  // Initialize enhanced logging system
+  logging::init_logging(&config, cli.verbose)?;
+
+  // Log system information and configuration details
+  logging::log_system_info(&config);
 
   // Execute command
   match cli.command {
@@ -103,6 +110,10 @@ async fn main() -> Result<()> {
       info!("Downloading random photo from Picsum");
       wallpaper::set_picsum(&config).await?;
     }
+    Commands::Apod => {
+      info!("Downloading NASA Astronomy Picture of the Day");
+      wallpaper::set_apod(&config).await?;
+    }
     Commands::Daemon { foreground } => {
       if foreground {
         info!("Starting daemon in foreground mode");
@@ -117,10 +128,10 @@ async fn main() -> Result<()> {
     }
     Commands::Examples => {
       println!("🌊 wallflow Usage Examples");
-      println!("");
+      println!();
       println!("  # Set wallpaper from local collection");
       println!("  wallflow local");
-      println!("");
+      println!();
       println!("  # Start daemon (background)");
       println!("  wallflow daemon");
       println!();
@@ -165,6 +176,22 @@ async fn main() -> Result<()> {
       info!("Testing backend '{}' with image: {}", backend, test_image.display());
       wallpaper::test_backend(&backend, &test_image, &config).await?;
     }
+    Commands::ListSources => {
+      let sources = downloaders::list_sources();
+      println!("🌊 wallflow Available Wallpaper Sources");
+      println!();
+      for source in sources {
+        println!("  {}", source);
+      }
+      if let Err(e) = check_sources_availability().await {
+        println!();
+        println!("⚠️  Note: {}", e);
+      }
+    }
+    Commands::Tui => {
+      info!("🎨 Launching TUI wallpaper browser");
+      tui::run_with_default_terminal(config).await?;
+    }
   }
 
   info!("✨ wallflow completed successfully");
@@ -182,12 +209,11 @@ fn get_default_test_image(config: &Config) -> Result<std::path::PathBuf> {
       let entry = entry?;
       let path = entry.path();
 
-      if path.is_file() {
-        if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
-          if config.sources.local.formats.iter().any(|fmt| fmt.eq_ignore_ascii_case(extension)) {
-            return Ok(path);
-          }
-        }
+      if path.is_file()
+        && let Some(extension) = path.extension().and_then(|ext| ext.to_str())
+        && config.sources.local.formats.iter().any(|fmt| fmt.eq_ignore_ascii_case(extension))
+      {
+        return Ok(path);
       }
     }
   }
@@ -197,6 +223,23 @@ fn get_default_test_image(config: &Config) -> Result<std::path::PathBuf> {
     "No test images found in {}. Please provide a test image path or add images to your local wallpaper directory.",
     wallpaper_dir.display()
   ))
+}
+
+async fn check_sources_availability() -> Result<()> {
+  use crate::downloaders::registry::DownloaderRegistry;
+
+  let registry = DownloaderRegistry::new();
+  let sources = registry.list_sources();
+
+  for source in sources {
+    if let Ok(downloader) = registry.get_downloader(&source)
+      && !downloader.is_available().await
+    {
+      return Err(anyhow::anyhow!("Some sources may be unavailable due to network connectivity"));
+    }
+  }
+
+  Ok(())
 }
 
 fn show_config(config: &Config) -> Result<()> {

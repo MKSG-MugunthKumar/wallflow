@@ -5,7 +5,7 @@ pub struct WindowsSystemParametersBackend;
 
 #[cfg(target_os = "windows")]
 impl WindowsSystemParametersBackend {
-    pub fn new() -> Self {
-        Self
-    }
+  pub fn new() -> Self {
+    Self
+  }
 }
