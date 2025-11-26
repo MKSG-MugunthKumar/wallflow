@@ -12,7 +12,6 @@ fn test_config_default() {
   assert_eq!(config.timer.interval, 30);
   assert_eq!(config.timer.randomize, "5m");
   assert_eq!(config.sources.default, "wallhaven");
-  assert_eq!(config.sources.category, "nature");
   assert_eq!(config.cleanup.keep_count, 10);
   assert!(config.cleanup.auto_cleanup);
 
@@ -23,8 +22,6 @@ fn test_config_default() {
 
   // Test nested defaults (from Default trait, not serde defaults)
   assert!(!config.integration.pywal.enabled); // Default trait sets to false
-  assert!(!config.integration.desktop.notify_completion); // Default trait sets to false
-  assert_eq!(config.sources.wallhaven.quality, ""); // Default trait sets to empty string
   assert_eq!(config.sources.local.formats, Vec::<String>::new()); // Default trait sets to empty vec
 }
 
@@ -66,7 +63,6 @@ timer:
 
 sources:
   default: local
-  category: abstract
 
 cleanup:
   keep_count: 5
@@ -89,7 +85,6 @@ logging:
   assert_eq!(config.paths.downloads, "/home/user/downloads");
   assert_eq!(config.timer.interval, 60);
   assert_eq!(config.sources.default, "local");
-  assert_eq!(config.sources.category, "abstract");
   assert_eq!(config.cleanup.keep_count, 5);
   assert!(!config.cleanup.auto_cleanup);
   assert!(!config.logging.enabled);
@@ -206,19 +201,15 @@ fn test_wallhaven_config_defaults() {
   // Test the struct default (derives Default)
   let config = WallhavenConfig::default();
 
-  assert!(config.api_key.is_none());
   assert!(config.resolution.is_none());
-  assert_eq!(config.quality, ""); // Default trait sets to empty string
-  assert!(config.purity.is_empty());
+  assert_eq!(config.q, ""); // Default trait sets to empty string
 
   // Test that serde defaults work during deserialization
   let minimal_yaml = r#"{}"#;
   let config: WallhavenConfig = serde_yaml::from_str(minimal_yaml).expect("Failed to parse minimal wallhaven config");
 
-  assert!(config.api_key.is_none());
   assert!(config.resolution.is_none());
-  assert_eq!(config.quality, "large");
-  assert!(config.purity.is_empty());
+  assert_eq!(config.q, "large");
 }
 
 #[test]

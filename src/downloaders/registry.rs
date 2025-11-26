@@ -22,7 +22,7 @@ impl DownloaderRegistry {
   /// Register all built-in downloaders
   fn register_builtin_downloaders(&mut self) {
     // Register NASA APOD downloader
-    self.register_downloader(Arc::new(ApodDownloader::new()));
+    self.register_downloader(Arc::new(ApodDownloader));
 
     // TODO: Register other downloaders as they are implemented
     // self.register_downloader(Arc::new(BingDownloader::new()));

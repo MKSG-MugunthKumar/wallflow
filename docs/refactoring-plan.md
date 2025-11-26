@@ -281,7 +281,7 @@ impl WallpaperDownloader for WallhavenDownloader {
 **File**: `src/downloaders/apod.rs`
 
 ```rust
-pub struct ApodDownloader {
+pub struct ApodRequest {
     client: HttpClient,
 }
 
@@ -296,7 +296,7 @@ struct ApodResponse {
 }
 
 #[async_trait]
-impl WallpaperDownloader for ApodDownloader {
+impl WallpaperDownloader for ApodRequest {
     async fn download(&self, request: &DownloadRequest) -> Result<DownloadedWallpaper> {
         // NASA APOD API: https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY
         // Educational: JSON parsing, optional fields handling

@@ -4,7 +4,7 @@ paths:
   local: "${HOME}/Pictures/Wallpapers"
   downloads: "${HOME}/Pictures/Wallpapers/downloads"
 
-# Transition animations
+# Transition animations, used only when awww is used as a backend
 transition:
   type: ["fade", "wipe", "outer", "random"]  # Single type or array
   duration: 5  # Seconds
@@ -18,16 +18,19 @@ timer:
 
 # Wallpaper sources
 sources:
-  default: "wallhaven"  # local, wallhaven, picsum
-  category: "nature"
+  default: "local"  # local, wallhaven, picsum
   wallhaven:
     api_key: ""  # Optional for rate limits
     resolution: "2560x1440"
     quality: "large"  # large, medium, small
     purity: ["sfw"]  # sfw, sketchy, nsfw
+    categories: ["general", "nature", "night", "skyline", "beach", "sunset"]  # general, anime, people
   picsum:
     width: 2560
     height: 1440
+  apod:
+    url: "https://api.nasa.gov/planetary/apod"
+    api_key: "DEMO_KEY"  # Replace with your NASA API key
   local:
     recursive: true  # Search subdirectories
     formats: ["jpg", "jpeg", "png", "webp"]
@@ -41,12 +44,7 @@ cleanup:
 integration:
   pywal:
     enabled: true
-    backend: "wal"  # wal, haishoku, colorthief, colorz
-    notify_apps: ["neovim", "kitty"]
-  desktop:
-    notify_completion: true
-    icon_theme_sync: false
-    update_terminal_colors: false  # Prevent terminal corruption
+    backend: "colorz"  # wal, haishoku, colorthief, colorz
 
 # Logging
 logging:
@@ -57,6 +55,7 @@ logging:
 
 # Advanced settings
 advanced:
+  user_agent: "wallflow/1.0 (+https://github.com/MKSG-MugunthKumar/wallflow)"
   parallel_downloads: 3
   retry_attempts: 3
   timeout: 30

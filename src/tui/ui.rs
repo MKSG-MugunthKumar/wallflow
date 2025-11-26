@@ -228,7 +228,6 @@ fn format_daemon_status(app: &App) -> String {
       }
 
       details.push(format!("🎯 Source: {}", status.config.source));
-      details.push(format!("📂 Category: {}", status.config.category));
     }
 
     details.join("\n")
@@ -271,7 +270,6 @@ fn draw_settings_mode(f: &mut Frame, area: Rect, app: &App) {
         Local Path: {}\n\
         Downloads: {}\n\
         Default Source: {}\n\
-        Category: {}\n\
         Formats: {}\n\
         Recursive: {}\n\n\
         [Settings editing will be implemented in future versions]\n\n\
@@ -279,7 +277,6 @@ fn draw_settings_mode(f: &mut Frame, area: Rect, app: &App) {
     app.config.paths.local,
     app.config.paths.downloads,
     app.config.sources.default,
-    app.config.sources.category,
     app.config.sources.local.formats.join(", "),
     app.config.sources.local.recursive
   );

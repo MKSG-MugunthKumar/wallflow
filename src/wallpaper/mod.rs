@@ -124,7 +124,7 @@ pub async fn set_local(config: &Config) -> Result<()> {
 }
 
 /// Download and set wallpaper from Wallhaven (legacy API)
-pub async fn set_wallhaven(_config: &Config, _category: &str) -> Result<()> {
+pub async fn set_wallhaven(_config: &Config) -> Result<()> {
   // This will be implemented with the new downloader system later
   // For now, preserve the existing behavior from wallpaper.rs
   todo!("Wallhaven implementation will be migrated to new downloader system")
@@ -143,11 +143,7 @@ pub async fn set_apod(config: &Config) -> Result<()> {
 
   // Use the new downloader system
   let downloaded = crate::downloaders::download_from_source("apod", config).await?;
-  debug!(
-    "Downloaded: {} from {}",
-    downloaded.title.as_deref().unwrap_or("NASA APOD"),
-    downloaded.source_url.as_deref().unwrap_or("NASA API")
-  );
+  debug!("Downloaded: {:?}", downloaded);
 
   // Apply the downloaded wallpaper
   apply_wallpaper(&downloaded.file_path, config).await?;

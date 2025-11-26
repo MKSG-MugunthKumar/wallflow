@@ -1,6 +1,5 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use std::path::{Path, PathBuf};
 
 /// Request parameters for downloading a wallpaper
@@ -10,28 +9,6 @@ pub struct DownloadRequest {
   pub category: Option<String>,
   pub resolution: Option<(u32, u32)>,
   pub quality: Option<String>,
-}
-
-/// Result of a successful wallpaper download
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct DownloadedWallpaper {
-  pub file_path: PathBuf,
-  pub source_url: Option<String>,
-  pub title: Option<String>,
-  pub description: Option<String>,
-  pub metadata: WallpaperMetadata,
-}
-
-/// Metadata about a downloaded wallpaper
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct WallpaperMetadata {
-  pub dimensions: Option<(u32, u32)>,
-  pub file_size: Option<u64>,
-  pub format: Option<String>,
-  pub source: String,
-  pub downloaded_at: DateTime<Utc>,
 }
 
 /// Options for applying wallpaper to desktop

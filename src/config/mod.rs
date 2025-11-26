@@ -50,24 +50,23 @@ pub struct TimerConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SourcesConfig {
   pub default: String,
-  pub category: String,
   #[serde(default)]
   pub wallhaven: WallhavenConfig,
   #[serde(default)]
   pub picsum: PicsumConfig,
   #[serde(default)]
   pub local: LocalConfig,
+  #[serde(default)]
+  pub apod: ApodConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct WallhavenConfig {
-  pub api_key: Option<String>,
+  pub url: String,
+  #[serde(default)]
+  pub q: String,
   #[serde(default)]
   pub resolution: Option<String>, // Auto-detect if None
-  #[serde(default = "default_quality")]
-  pub quality: String,
-  #[serde(default)]
-  pub purity: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -76,6 +75,14 @@ pub struct PicsumConfig {
   pub width: Option<u32>, // Auto-detect if None
   #[serde(default)]
   pub height: Option<u32>, // Auto-detect if None
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+pub struct ApodConfig {
+  #[serde(default = "default_apod_api_url")]
+  pub url: String,
+  #[serde(default = "default_apod_api_key")]
+  pub api_key: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -97,8 +104,6 @@ pub struct CleanupConfig {
 pub struct IntegrationConfig {
   #[serde(default)]
   pub pywal: PywalConfig,
-  #[serde(default)]
-  pub desktop: DesktopConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -107,18 +112,6 @@ pub struct PywalConfig {
   pub enabled: bool,
   #[serde(default)]
   pub backend: Option<String>,
-  #[serde(default)]
-  pub notify_apps: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Default)]
-pub struct DesktopConfig {
-  #[serde(default = "default_true")]
-  pub notify_completion: bool,
-  #[serde(default)]
-  pub icon_theme_sync: bool,
-  #[serde(default)]
-  pub update_terminal_colors: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -141,14 +134,21 @@ pub struct AdvancedConfig {
   pub retry_attempts: u32,
   #[serde(default = "default_timeout")]
   pub timeout: u32,
+  #[serde(default = "default_user_agent")]
+  pub user_agent: String,
 }
 
 // Default value functions (serde uses these for missing fields)
 fn default_fps() -> u32 {
   30
 }
-fn default_quality() -> String {
-  "large".to_string()
+
+fn default_apod_api_url() -> String {
+  "https://api.nasa.gov/planetary/apod".to_string()
+}
+
+fn default_apod_api_key() -> String {
+  "DEMO_KEY".to_string()
 }
 fn default_true() -> bool {
   true
@@ -158,6 +158,9 @@ fn default_formats() -> Vec<String> {
 }
 fn default_log_level() -> String {
   "info".to_string()
+}
+fn default_user_agent() -> String {
+  "Wallflow/1.0 (+https://github.com/MKSG-MugunthKumar/wallflow)".to_string()
 }
 fn default_parallel_downloads() -> u32 {
   3
@@ -248,11 +251,11 @@ impl Default for Config {
         start_delay: Some("1m".to_string()),
       },
       sources: SourcesConfig {
-        default: "wallhaven".to_string(),
-        category: "nature".to_string(),
+        default: "local".to_string(),
         wallhaven: WallhavenConfig::default(),
         picsum: PicsumConfig::default(),
         local: LocalConfig::default(),
+        apod: ApodConfig::default(),
       },
       cleanup: CleanupConfig {
         keep_count: 10,

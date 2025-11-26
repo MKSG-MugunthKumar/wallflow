@@ -41,10 +41,7 @@ enum Commands {
   /// Set wallpaper from local collection
   Local,
   /// Download and set wallpaper from Wallhaven
-  Wallhaven {
-    /// Search category (nature, abstract, etc.)
-    category: Option<String>,
-  },
+  Wallhaven,
   /// Set random photo from Picsum
   Picsum,
   /// Download NASA Astronomy Picture of the Day
@@ -101,9 +98,8 @@ async fn main() -> Result<()> {
     Commands::Local => {
       wallpaper::set_local(&config).await?;
     }
-    Commands::Wallhaven { category } => {
-      let search_category = category.unwrap_or(config.sources.category.clone());
-      wallpaper::set_wallhaven(&config, &search_category).await?;
+    Commands::Wallhaven => {
+      wallpaper::set_wallhaven(&config).await?;
     }
     Commands::Picsum => {
       wallpaper::set_picsum(&config).await?;
@@ -178,10 +174,6 @@ async fn main() -> Result<()> {
       for source in sources {
         println!("  {}", source);
       }
-      if let Err(e) = check_sources_availability().await {
-        println!();
-        println!("⚠️  Note: {}", e);
-      }
     }
     Commands::Tui => {
       info!("🎨 Launching TUI wallpaper browser");
@@ -219,23 +211,6 @@ fn get_default_test_image(config: &Config) -> Result<std::path::PathBuf> {
   ))
 }
 
-async fn check_sources_availability() -> Result<()> {
-  use crate::downloaders::registry::DownloaderRegistry;
-
-  let registry = DownloaderRegistry::new();
-  let sources = registry.list_sources();
-
-  for source in sources {
-    if let Ok(downloader) = registry.get_downloader(&source)
-      && !downloader.is_available().await
-    {
-      return Err(anyhow::anyhow!("Some sources may be unavailable due to network connectivity"));
-    }
-  }
-
-  Ok(())
-}
-
 fn show_config(config: &Config) -> Result<()> {
   println!("🌊 wallflow Configuration");
   println!();
@@ -255,18 +230,9 @@ fn show_config(config: &Config) -> Result<()> {
   println!();
   println!("Sources:");
   println!("  Default: {}", config.sources.default);
-  println!("  Category: {}", config.sources.category);
   println!();
   println!("Integration:");
   println!("  Pywal: {}", if config.integration.pywal.enabled { "enabled" } else { "disabled" });
-  println!(
-    "  Terminal colors: {}",
-    if config.integration.desktop.update_terminal_colors {
-      "enabled"
-    } else {
-      "disabled"
-    }
-  );
 
   Ok(())
 }

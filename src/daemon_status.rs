@@ -57,9 +57,6 @@ pub struct DaemonConfig {
 
   /// Default wallpaper source
   pub source: String,
-
-  /// Category for source
-  pub category: String,
 }
 
 #[allow(dead_code)]
@@ -80,7 +77,6 @@ impl DaemonStatus {
         interval_minutes: config.timer.interval,
         randomize: config.timer.randomize.clone(),
         source: config.sources.default.clone(),
-        category: config.sources.category.clone(),
       },
       updated_at: now,
     }

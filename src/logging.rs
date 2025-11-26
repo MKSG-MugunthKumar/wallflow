@@ -187,7 +187,6 @@ pub fn log_system_info(config: &Config) {
   debug!("  Local wallpapers: {}", config.paths.local);
   debug!("  Downloads: {}", config.paths.downloads);
   debug!("  Default source: {}", config.sources.default);
-  debug!("  Default category: {}", config.sources.category);
 
   // Log platform and backend information
   if let Ok(platform_info) = crate::wallpaper::platform_info() {
