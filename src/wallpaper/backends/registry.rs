@@ -62,9 +62,6 @@ impl BackendRegistry {
         warn!("Windows backends not available on this platform");
       }
     }
-
-    // Always try to register awww as it might work cross-platform
-    self.register_awww_backend();
   }
 
   /// Register all available backends (fallback)
@@ -110,7 +107,7 @@ impl BackendRegistry {
       }
 
       crate::platform::LinuxDisplayServer::X11 => {
-        // X10 backends in priority order
+        // X11 backends in priority order
         self.register_backend(Arc::new(FehBackend::new()));
         self.register_backend(Arc::new(NitrogenBackend::new()));
         self.register_backend(Arc::new(XwallpaperBackend::new()));
