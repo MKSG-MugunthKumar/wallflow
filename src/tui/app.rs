@@ -10,7 +10,7 @@
 use crate::daemon_status::{DaemonStatus, DaemonStatusManager};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 /// Main application state
 #[derive(Debug)]
@@ -88,7 +88,7 @@ pub enum ViewMode {
 impl App {
   /// Create a new application instance
   pub async fn new(config: crate::config::Config) -> Result<Self> {
-    info!("🎨 Initializing TUI application");
+    debug!("🎨 Initializing TUI application");
 
     let daemon_status_manager = DaemonStatusManager::new()?;
 
@@ -147,7 +147,7 @@ impl App {
     self.wallpapers = wallpapers;
     self.selected = 0; // Reset selection
 
-    info!("📁 Loaded {} wallpapers", self.wallpapers.len());
+    debug!("📁 Loaded {} wallpapers", self.wallpapers.len());
     Ok(())
   }
 
@@ -220,7 +220,7 @@ impl App {
   /// Set the selected wallpaper as desktop background
   pub async fn apply_selected_wallpaper(&mut self) -> Result<()> {
     if let Some(wallpaper) = self.selected_wallpaper().cloned() {
-      info!("🖼️  Setting wallpaper: {}", wallpaper.name);
+      debug!("🖼️  Setting wallpaper: {}", wallpaper.name);
       self.status_message = Some("Applying wallpaper...".to_string());
 
       // Use the wallpaper module to apply the wallpaper
@@ -251,7 +251,7 @@ impl App {
 
   /// Handle quit request
   pub fn quit(&mut self) {
-    info!("🚪 Exiting TUI application");
+    debug!("🚪 Exiting TUI application");
     self.should_quit = true;
   }
 

@@ -7,61 +7,6 @@ use std::path::{Path, PathBuf};
 use tokio::process::Command as AsyncCommand;
 use tracing::debug;
 
-/// swww backend for Wayland (animated wallpapers)
-pub struct SwwwBackend;
-
-impl SwwwBackend {
-  pub fn new() -> Self {
-    Self
-  }
-}
-
-#[async_trait]
-impl WallpaperBackend for SwwwBackend {
-  async fn set_wallpaper(&self, image_path: &Path, options: &WallpaperOptions) -> Result<()> {
-    let mut cmd = AsyncCommand::new("swww");
-    cmd.args(["img", &image_path.to_string_lossy()]);
-
-    // Add transition if specified
-    if let Some(transition) = &options.transition {
-      cmd.args(["--transition-type", transition]);
-    }
-
-    if let Some(fps) = options.fps {
-      cmd.args(["--transition-fps", &fps.to_string()]);
-    }
-
-    let output = cmd.output().await.context("Failed to execute swww")?;
-
-    if output.status.success() {
-      debug!("✅ swww wallpaper set successfully");
-      Ok(())
-    } else {
-      let stderr = String::from_utf8_lossy(&output.stderr);
-      Err(anyhow::anyhow!("swww failed: {}", stderr))
-    }
-  }
-
-  async fn get_current_wallpaper(&self) -> Result<Option<PathBuf>> {
-    Ok(None) // swww doesn't support getting current wallpaper easily
-  }
-
-  fn is_available(&self) -> bool {
-    which::which("swww").is_ok()
-  }
-
-  fn priority(&self) -> u32 {
-    100
-  }
-  fn name(&self) -> &'static str {
-    "swww"
-  }
-
-  fn supported_transitions(&self) -> Vec<String> {
-    vec!["fade".to_string(), "wipe".to_string(), "grow".to_string(), "outer".to_string()]
-  }
-}
-
 /// swaybg backend for Sway
 pub struct SwaybgBackend;
 

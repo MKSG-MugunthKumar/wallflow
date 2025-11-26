@@ -1,6 +1,4 @@
-# wallflow Configuration - Rust Edition 🦀
-# Much cleaner than that horrific AWK parser!
-
+# wallflow Configuration
 # Directory paths (XDG Base Directory compliant)
 paths:
   local: "${HOME}/Pictures/Wallpapers"
@@ -9,41 +7,41 @@ paths:
 # Transition animations
 transition:
   type: ["fade", "wipe", "outer", "random"]  # Single type or array
-  duration: 5     # Seconds
-  fps: 30         # Frame rate
+  duration: 5  # Seconds
+  fps: 30  # Frame rate
 
 # Automated rotation settings
 timer:
-  interval: 30        # Minutes between changes
-  randomize: "5m"     # Add timing randomization
-  start_delay: "1m"   # Delay after boot
+  interval: 30  # Minutes between changes
+  randomize: "5m"  # Add timing randomization
+  start_delay: "1m"  # Delay after boot
 
 # Wallpaper sources
 sources:
-  default: "wallhaven"    # local, wallhaven, picsum
+  default: "wallhaven"  # local, wallhaven, picsum
   category: "nature"
   wallhaven:
-    api_key: ""           # Optional for rate limits
+    api_key: ""  # Optional for rate limits
     resolution: "2560x1440"
-    quality: "large"      # large, medium, small
-    purity: ["sfw"]       # sfw, sketchy, nsfw
+    quality: "large"  # large, medium, small
+    purity: ["sfw"]  # sfw, sketchy, nsfw
   picsum:
     width: 2560
     height: 1440
   local:
-    recursive: true       # Search subdirectories
+    recursive: true  # Search subdirectories
     formats: ["jpg", "jpeg", "png", "webp"]
 
 # Cleanup management
 cleanup:
-  keep_count: 10          # Number of downloads to retain
+  keep_count: 10  # Number of downloads to retain
   auto_cleanup: true
 
 # Desktop integration
 integration:
   pywal:
     enabled: true
-    backend: "wal"        # wal, haishoku, colorthief, colorz
+    backend: "wal"  # wal, haishoku, colorthief, colorz
     notify_apps: ["neovim", "kitty"]
   desktop:
     notify_completion: true
@@ -53,7 +51,7 @@ integration:
 # Logging
 logging:
   enabled: true
-  level: "info"           # debug, info, warn, error
+  level: "info"  # debug, info, warn, error
   file: "${HOME}/.local/share/wallflow/wallflow.log"  # Optional file output
   timestamp: true
 

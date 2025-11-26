@@ -95,7 +95,7 @@ impl WallpaperBackend for AwwwBackend {
 
   fn validate(&self) -> Result<()> {
     if !self.is_available() {
-      return Err(anyhow::anyhow!("awww is not available. Install from: https://github.com/ldelossa/awww"));
+      return Err(anyhow::anyhow!("awww is not available. Install from: https://codeberg.org/LGFae/awww"));
     }
 
     // Could add additional validation here (version check, etc.)

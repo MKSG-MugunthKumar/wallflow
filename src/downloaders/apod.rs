@@ -13,7 +13,7 @@ use chrono::Utc;
 use reqwest::Client;
 use serde::Deserialize;
 use std::path::Path;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 /// NASA APOD API response structure
 #[derive(Debug, Deserialize)]
@@ -71,7 +71,7 @@ impl ApodDownloader {
     let response = self
       .client
       .get(&self.api_url)
-      .header("User-Agent", "wallflow/1.0 (Educational wallpaper manager)")
+      .header("User-Agent", "wallflow/1.0 (Wallpaper manager)")
       .send()
       .await
       .context("Failed to send request to NASA APOD API")?;
@@ -118,7 +118,7 @@ impl ApodDownloader {
     tokio::fs::write(file_path, &bytes).await.context("Failed to save image to file")?;
 
     let file_size = bytes.len() as u64;
-    info!("Successfully downloaded {} bytes to {}", file_size, file_path.display());
+    debug!("Successfully downloaded {} bytes to {}", file_size, file_path.display());
 
     Ok(file_size)
   }
@@ -169,7 +169,7 @@ impl ApodDownloader {
 #[async_trait]
 impl WallpaperDownloader for ApodDownloader {
   async fn download(&self, request: &DownloadRequest) -> Result<DownloadedWallpaper> {
-    info!("Starting NASA APOD wallpaper download");
+    debug!("Starting NASA APOD wallpaper download");
 
     // Note: APOD doesn't support categories or custom resolutions
     // It always returns today's astronomy picture
@@ -182,7 +182,7 @@ impl WallpaperDownloader for ApodDownloader {
 
     // Step 2: Determine which image URL to use (prefer HD version)
     let image_url = apod_data.hdurl.as_ref().unwrap_or(&apod_data.url);
-    info!("Using image URL: {}", image_url);
+    debug!("Using image URL: {}", image_url);
 
     // Step 3: Generate safe filename for download
     let downloads_dir = crate::config::Config::load_or_default()
@@ -215,7 +215,7 @@ impl WallpaperDownloader for ApodDownloader {
       },
     };
 
-    info!("✅ Successfully downloaded APOD wallpaper: {}", apod_data.title);
+    debug!("✅ Successfully downloaded APOD wallpaper: {}", apod_data.title);
     Ok(downloaded_wallpaper)
   }
 

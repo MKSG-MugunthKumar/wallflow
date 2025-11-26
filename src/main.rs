@@ -7,6 +7,7 @@ mod daemon;
 mod daemon_status;
 mod display;
 mod downloaders;
+mod integration;
 mod logging;
 mod platform;
 mod tui;
@@ -98,28 +99,22 @@ async fn main() -> Result<()> {
   // Execute command
   match cli.command {
     Commands::Local => {
-      info!("Setting local wallpaper");
       wallpaper::set_local(&config).await?;
     }
     Commands::Wallhaven { category } => {
       let search_category = category.unwrap_or(config.sources.category.clone());
-      info!("Downloading wallpaper from Wallhaven (category: {})", search_category);
       wallpaper::set_wallhaven(&config, &search_category).await?;
     }
     Commands::Picsum => {
-      info!("Downloading random photo from Picsum");
       wallpaper::set_picsum(&config).await?;
     }
     Commands::Apod => {
-      info!("Downloading NASA Astronomy Picture of the Day");
       wallpaper::set_apod(&config).await?;
     }
     Commands::Daemon { foreground } => {
       if foreground {
-        info!("Starting daemon in foreground mode");
         daemon::run_foreground(config).await?;
       } else {
-        info!("Starting daemon in background mode");
         daemon::run_background(config).await?;
       }
     }
@@ -194,7 +189,6 @@ async fn main() -> Result<()> {
     }
   }
 
-  info!("✨ wallflow completed successfully");
   Ok(())
 }
 

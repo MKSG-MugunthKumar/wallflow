@@ -39,7 +39,7 @@ pub fn init_logging(config: &Config, verbose_override: bool) -> Result<()> {
   }
 
   // Log initialization details
-  tracing::info!("🔍 Logging initialized successfully");
+  tracing::debug!("🔍 Logging initialized successfully");
   if verbose_override {
     tracing::debug!("Verbose mode enabled via CLI flag");
   }
@@ -180,9 +180,7 @@ fn normalize_log_level(level: &str) -> Result<&str> {
 
 /// Log system information and configuration details
 pub fn log_system_info(config: &Config) {
-  use tracing::{debug, info};
-
-  info!("🌊 wallflow {} starting", env!("CARGO_PKG_VERSION"));
+  use tracing::debug;
 
   // Log key configuration details
   debug!("Configuration loaded:");
@@ -211,7 +209,7 @@ pub fn log_system_info(config: &Config) {
   }
 
   if config.logging.file.is_some() {
-    info!("📝 File logging enabled: {}", config.logging.file.as_ref().unwrap());
+    debug!("📝 File logging enabled: {}", config.logging.file.as_ref().unwrap());
   }
 }
 

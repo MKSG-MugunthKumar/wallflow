@@ -3,6 +3,7 @@
 pub mod backends;
 
 use crate::config::Config;
+use crate::integration;
 use anyhow::{Context, Result};
 use backends::{
   BackendRegistry,
@@ -19,15 +20,22 @@ pub async fn apply_wallpaper(wallpaper_path: &Path, config: &Config) -> Result<(
 
   let options = build_wallpaper_options(config);
 
-  debug!("Applying wallpaper with {} backend", backend.name());
-  debug!("Options: transition={:?}, scaling={:?}", options.transition, options.scaling);
+  info!(
+    "Applying wallpaper with {}, options: transition={:?}, scaling={:?}",
+    backend.name(),
+    options.transition,
+    options.scaling
+  );
 
   backend
     .set_wallpaper(wallpaper_path, &options)
     .await
     .context("Failed to apply wallpaper")?;
 
-  info!("✅ Wallpaper applied successfully using {} backend", backend.name());
+  if config.integration.pywal.enabled {
+    integration::generate_pywal_colors(wallpaper_path, config).await
+  }
+  info!("✅ Wallpaper applied successfully using {}", backend.name());
 
   Ok(())
 }
@@ -111,8 +119,6 @@ pub fn platform_info() -> Result<String> {
 /// Set wallpaper from local collection (legacy API)
 pub async fn set_local(config: &Config) -> Result<()> {
   let wallpaper_path = select_local_wallpaper(config)?;
-  info!("Selected local wallpaper: {}", wallpaper_path.display());
-
   apply_wallpaper(&wallpaper_path, config).await?;
   Ok(())
 }
@@ -133,11 +139,11 @@ pub async fn set_picsum(_config: &Config) -> Result<()> {
 
 /// Download and set wallpaper from NASA APOD (new downloader system)
 pub async fn set_apod(config: &Config) -> Result<()> {
-  info!("Downloading wallpaper from NASA APOD");
+  debug!("Downloading wallpaper from NASA APOD");
 
   // Use the new downloader system
   let downloaded = crate::downloaders::download_from_source("apod", config).await?;
-  info!(
+  debug!(
     "Downloaded: {} from {}",
     downloaded.title.as_deref().unwrap_or("NASA APOD"),
     downloaded.source_url.as_deref().unwrap_or("NASA API")
