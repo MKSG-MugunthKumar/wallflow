@@ -60,13 +60,6 @@ enum Commands {
   PlatformInfo,
   /// List all available wallpaper backends
   ListBackends,
-  /// Test a specific wallpaper backend
-  TestBackend {
-    /// Backend name to test
-    backend: String,
-    /// Path to test image (optional, uses default if not provided)
-    image: Option<std::path::PathBuf>,
-  },
   /// List all available wallpaper sources
   ListSources,
   /// Launch interactive TUI for wallpaper browsing
@@ -136,9 +129,6 @@ async fn main() -> Result<()> {
       println!("  wallflow platform-info");
       println!("  wallflow list-backends");
       println!();
-      println!("  # Test a specific backend");
-      println!("  wallflow test-backend swww");
-      println!();
       println!("  # Add to your shell startup script for auto-start:");
       println!("  echo 'wallflow daemon &' >> ~/.zshrc");
     }
@@ -156,17 +146,6 @@ async fn main() -> Result<()> {
         println!("  {}", backend);
       }
     }
-    Commands::TestBackend { backend, image } => {
-      let test_image = if let Some(img) = image {
-        img
-      } else {
-        // Use a default test image or the first local wallpaper
-        get_default_test_image(&config)?
-      };
-
-      info!("Testing backend '{}' with image: {}", backend, test_image.display());
-      wallpaper::test_backend(&backend, &test_image, &config).await?;
-    }
     Commands::ListSources => {
       let sources = downloaders::list_sources();
       println!("🌊 wallflow Available Wallpaper Sources");
@@ -182,33 +161,6 @@ async fn main() -> Result<()> {
   }
 
   Ok(())
-}
-
-fn get_default_test_image(config: &Config) -> Result<std::path::PathBuf> {
-  use std::path::Path;
-
-  // Try to find the first image in the local wallpaper directory
-  let wallpaper_dir = Path::new(&config.paths.local);
-
-  if wallpaper_dir.exists() {
-    for entry in std::fs::read_dir(wallpaper_dir)? {
-      let entry = entry?;
-      let path = entry.path();
-
-      if path.is_file()
-        && let Some(extension) = path.extension().and_then(|ext| ext.to_str())
-        && config.sources.local.formats.iter().any(|fmt| fmt.eq_ignore_ascii_case(extension))
-      {
-        return Ok(path);
-      }
-    }
-  }
-
-  // If no local images found, suggest creating a test image
-  Err(anyhow::anyhow!(
-    "No test images found in {}. Please provide a test image path or add images to your local wallpaper directory.",
-    wallpaper_dir.display()
-  ))
 }
 
 fn show_config(config: &Config) -> Result<()> {

@@ -1,8 +1,8 @@
 # wallflow Configuration
 # Directory paths (XDG Base Directory compliant)
 paths:
-  local: "${HOME}/Pictures/Wallpapers"
-  downloads: "${HOME}/Pictures/Wallpapers/downloads"
+  local: "Wallpapers"
+  downloads: "Wallpapers/downloads"
 
 # Transition animations, used only when awww is used as a backend
 transition:

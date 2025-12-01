@@ -9,7 +9,7 @@ pub async fn generate_pywal_colors(wallpaper_path: &Path, config: &Config) {
   cmd.args(["-ni", &wallpaper_path.to_string_lossy()]);
 
   if config.integration.pywal.backend.is_some() {
-    cmd.args(["--backend", config.integration.pywal.backend.as_ref().unwrap()]);
+    cmd.args(["--backend", config.integration.pywal.backend.as_ref().unwrap(), "--vte"]);
   }
 
   let output = cmd.output().await;

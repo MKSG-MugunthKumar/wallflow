@@ -98,7 +98,15 @@ impl WallpaperDownloader for ApodDownloader {
     let bytes = response.bytes().await.context("Failed to read image data")?;
 
     let filename = format!("{}_{}", self.source_name(), FilesystemHelper::make_file_suffix());
-    let file_path = Path::new(&config.paths.downloads).join(&filename);
+    let file_extension = image_url
+      .rsplit('.')
+      .next()
+      .and_then(|ext| {
+        let ext = ext.split('?').next().unwrap_or(ext);
+        if ext.len() <= 5 { Some(ext) } else { None }
+      })
+      .unwrap_or("jpg");
+    let file_path = Path::new(&config.paths.downloads).join(&filename).with_extension(file_extension);
 
     // Ensure the parent directory exists
     if let Some(parent) = file_path.parent() {

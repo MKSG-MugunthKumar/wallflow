@@ -4,7 +4,7 @@ use crate::platform::{Platform, detect_platform};
 use crate::wallpaper::backends::WallpaperBackend;
 use anyhow::{Result, anyhow};
 use std::sync::Arc;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 pub struct BackendRegistry {
   backends: Vec<Arc<dyn WallpaperBackend + Send + Sync>>,
@@ -32,7 +32,7 @@ impl BackendRegistry {
       }
     }
 
-    info!("Registered {} wallpaper backends", self.backends.len());
+    debug!("Registered {} wallpaper backends", self.backends.len());
   }
 
   /// Register backends for a specific platform
@@ -172,18 +172,6 @@ impl BackendRegistry {
     Err(anyhow!("No working wallpaper backends found"))
   }
 
-  /// Get a backend by name
-  pub fn get_backend(&self, name: &str) -> Result<Arc<dyn WallpaperBackend + Send + Sync>> {
-    for backend in &self.backends {
-      if backend.name() == name {
-        backend.validate()?;
-        return Ok((*backend).clone());
-      }
-    }
-
-    Err(anyhow!("Backend not found or not available: {}", name))
-  }
-
   /// List all registered backends
   pub fn list_backends(&self) -> Vec<String> {
     let mut backends: Vec<_> = self
@@ -199,11 +187,5 @@ impl BackendRegistry {
   /// Get all available backend names
   pub fn available_backend_names(&self) -> Vec<String> {
     self.backends.iter().filter(|b| b.is_available()).map(|b| b.name().to_string()).collect()
-  }
-}
-
-impl Default for BackendRegistry {
-  fn default() -> Self {
-    Self::new()
   }
 }

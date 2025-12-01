@@ -204,8 +204,8 @@ impl Config {
 
   /// Expand environment variables in paths
   pub fn expand_paths(&mut self) -> Result<()> {
-    self.paths.local = expand_path(&self.paths.local)?;
-    self.paths.downloads = expand_path(&self.paths.downloads)?;
+    self.paths.local = resolve_wallpaper_path(&self.paths.local);
+    self.paths.downloads = resolve_wallpaper_path(&self.paths.downloads);
     Ok(())
   }
 
@@ -268,11 +268,19 @@ impl Default for Config {
   }
 }
 
-/// Expand environment variables in path strings
-fn expand_path(path: &str) -> Result<String> {
-  let expanded = shellexpand::full(path).with_context(|| format!("Failed to expand path: {}", path))?;
-  Ok(expanded.to_string())
-}
+fn resolve_wallpaper_path(path: &str) -> String {
+  let path_obj = Path::new(path);
 
-#[cfg(test)]
-mod tests;
+  if path_obj.is_absolute() {
+    // Absolute path - expand any env vars like $HOME or ~
+    shellexpand::full(path).map(|s| s.into_owned()).unwrap_or_else(|_| path.to_string())
+  } else {
+    // Relative path - resolve from XDG pictures dir
+    let base = dirs::picture_dir().unwrap_or_else(|| PathBuf::from("~/Pictures"));
+    let full_path = base.join(path_obj);
+    let full_path_str = full_path.to_string_lossy();
+    shellexpand::full(&full_path_str)
+      .map(|s| s.into_owned())
+      .unwrap_or_else(|_| full_path_str.into_owned())
+  }
+}

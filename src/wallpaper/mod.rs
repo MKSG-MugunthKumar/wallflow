@@ -20,7 +20,7 @@ pub async fn apply_wallpaper(wallpaper_path: &Path, config: &Config) -> Result<(
 
   let options = build_wallpaper_options(config);
 
-  info!(
+  debug!(
     "Applying wallpaper with {}, options: transition={:?}, scaling={:?}",
     backend.name(),
     options.transition,
@@ -35,7 +35,7 @@ pub async fn apply_wallpaper(wallpaper_path: &Path, config: &Config) -> Result<(
   if config.integration.pywal.enabled {
     integration::generate_pywal_colors(wallpaper_path, config).await
   }
-  info!("✅ Wallpaper applied successfully using {}", backend.name());
+  info!("✅ Wallpaper {} applied successfully using {}", wallpaper_path.display(), backend.name());
 
   Ok(())
 }
@@ -58,26 +58,6 @@ fn build_wallpaper_options(config: &Config) -> WallpaperOptions {
     scaling: WallpaperScaling::Fill, // Default for now, could be configurable
     monitor: MonitorSelection::All,
   }
-}
-
-/// Test a specific backend with a wallpaper
-pub async fn test_backend(backend_name: &str, wallpaper_path: &Path, config: &Config) -> Result<()> {
-  let registry = BackendRegistry::new();
-  let backend = registry
-    .get_backend(backend_name)
-    .with_context(|| format!("Backend '{}' not found or not available", backend_name))?;
-
-  let options = build_wallpaper_options(config);
-
-  info!("Testing {} backend with {}", backend_name, wallpaper_path.display());
-
-  backend
-    .set_wallpaper(wallpaper_path, &options)
-    .await
-    .with_context(|| format!("Failed to test {} backend", backend_name))?;
-
-  info!("✅ Backend {} test successful", backend_name);
-  Ok(())
 }
 
 /// List all available wallpaper backends
@@ -139,14 +119,10 @@ pub async fn set_picsum(_config: &Config) -> Result<()> {
 
 /// Download and set wallpaper from NASA APOD (new downloader system)
 pub async fn set_apod(config: &Config) -> Result<()> {
-  debug!("Downloading wallpaper from NASA APOD");
-
-  // Use the new downloader system
-  let downloaded = crate::downloaders::download_from_source("apod", config).await?;
-  debug!("Downloaded: {:?}", downloaded);
-
-  // Apply the downloaded wallpaper
-  apply_wallpaper(&downloaded.file_path, config).await?;
+  info!("Downloading wallpaper from NASA APOD");
+  let wallpaper = crate::downloaders::download_from_source("apod", config).await?;
+  debug!("Downloaded: {:?}", wallpaper);
+  apply_wallpaper(&wallpaper.file_path, config).await?;
   Ok(())
 }
 
