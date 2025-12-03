@@ -32,6 +32,9 @@ pub async fn apply_wallpaper(wallpaper_path: &Path, config: &Config) -> Result<(
     .await
     .context("Failed to apply wallpaper")?;
 
+  // Set KDE Plasma wallpaper if available (ensures KDE apps inherit colors)
+  integration::set_kde_wallpaper(wallpaper_path).await;
+
   if config.integration.pywal.enabled {
     integration::generate_pywal_colors(wallpaper_path, config).await
   }
