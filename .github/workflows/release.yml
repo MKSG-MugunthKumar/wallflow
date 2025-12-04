@@ -143,3 +143,12 @@ jobs:
         run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  copr-build:
+    name: Trigger COPR build
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Trigger Fedora COPR build
+        run: |
+          curl -X POST "https://copr.fedorainfracloud.org/webhooks/custom/209154/b911ecac-f44d-472a-b7e9-fff5a19c59e7/wallflow"
