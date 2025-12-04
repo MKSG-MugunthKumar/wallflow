@@ -106,18 +106,22 @@ pub async fn set_local(config: &Config) -> Result<()> {
   Ok(())
 }
 
-/// Download and set wallpaper from Wallhaven (legacy API)
-pub async fn set_wallhaven(_config: &Config) -> Result<()> {
-  // This will be implemented with the new downloader system later
-  // For now, preserve the existing behavior from wallpaper.rs
-  todo!("Wallhaven implementation will be migrated to new downloader system")
+/// Download and set wallpaper from Wallhaven
+pub async fn set_wallhaven(config: &Config) -> Result<()> {
+  info!("Downloading wallpaper from Wallhaven");
+  let wallpaper = crate::downloaders::download_from_source("wallhaven", config).await?;
+  debug!("Downloaded: {:?}", wallpaper);
+  apply_wallpaper(&wallpaper.file_path, config).await?;
+  Ok(())
 }
 
-/// Download random photo from Picsum (legacy API)
-pub async fn set_picsum(_config: &Config) -> Result<()> {
-  // This will be implemented with the new downloader system later
-  // For now, preserve the existing behavior from wallpaper.rs
-  todo!("Picsum implementation will be migrated to new downloader system")
+/// Download random photo from Picsum
+pub async fn set_picsum(config: &Config) -> Result<()> {
+  info!("Downloading wallpaper from Picsum");
+  let wallpaper = crate::downloaders::download_from_source("picsum", config).await?;
+  debug!("Downloaded: {:?}", wallpaper);
+  apply_wallpaper(&wallpaper.file_path, config).await?;
+  Ok(())
 }
 
 /// Download and set wallpaper from NASA APOD (new downloader system)

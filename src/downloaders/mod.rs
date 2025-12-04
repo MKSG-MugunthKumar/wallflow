@@ -3,8 +3,10 @@
 pub mod apod;
 pub mod client;
 pub mod filesystem;
+pub mod picsum;
 pub mod registry;
 pub mod traits;
+pub mod wallhaven;
 
 use crate::config::Config;
 use anyhow::Result;

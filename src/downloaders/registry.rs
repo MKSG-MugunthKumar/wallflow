@@ -1,5 +1,7 @@
 use super::apod::ApodDownloader;
+use super::picsum::PicsumDownloader;
 use super::traits::WallpaperDownloader;
+use super::wallhaven::WallhavenDownloader;
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -21,13 +23,9 @@ impl DownloaderRegistry {
 
   /// Register all built-in downloaders
   fn register_builtin_downloaders(&mut self) {
-    // Register NASA APOD downloader
     self.register_downloader(Arc::new(ApodDownloader));
-
-    // TODO: Register other downloaders as they are implemented
-    // self.register_downloader(Arc::new(BingDownloader::new()));
-    // self.register_downloader(Arc::new(EarthviewDownloader::new()));
-    // self.register_downloader(Arc::new(RedditDownloader::new()));
+    self.register_downloader(Arc::new(PicsumDownloader));
+    self.register_downloader(Arc::new(WallhavenDownloader));
   }
 
   /// Register a new downloader

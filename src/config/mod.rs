@@ -62,11 +62,20 @@ pub struct SourcesConfig {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct WallhavenConfig {
+  #[serde(default = "default_wallhaven_url")]
   pub url: String,
+  #[serde(default)]
+  pub api_key: Option<String>,
   #[serde(default)]
   pub q: String,
   #[serde(default)]
   pub resolution: Option<String>, // Auto-detect if None
+  #[serde(default = "default_wallhaven_quality")]
+  pub quality: String, // large, medium, small (not used by API but for future)
+  #[serde(default)]
+  pub purity: Vec<String>, // sfw, sketchy, nsfw
+  #[serde(default)]
+  pub categories: Vec<String>, // general, anime, people (or search terms)
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -141,6 +150,14 @@ pub struct AdvancedConfig {
 // Default value functions (serde uses these for missing fields)
 fn default_fps() -> u32 {
   30
+}
+
+fn default_wallhaven_url() -> String {
+  "https://wallhaven.cc/api/v1/search".to_string()
+}
+
+fn default_wallhaven_quality() -> String {
+  "large".to_string()
 }
 
 fn default_apod_api_url() -> String {
