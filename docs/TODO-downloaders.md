@@ -9,7 +9,7 @@
 - [x] **Bing** - Bing Photo of the Day (daily curated images)
 - [x] **Reddit** - Subreddit wallpapers (r/wallpapers, r/earthporn, etc.)
 - [x] **Earth View** - Google satellite imagery
-- [x] **Unsplash** - High-resolution photos (requires API key)
+- [x] **Unsplash** - High-resolution photos (requires Access Key)
 
 ## CLI Usage
 
@@ -40,7 +40,7 @@ sources:
     categories: [general]
 
   unsplash:
-    api_key: "your-api-key" # Required
+    access_key: "your-access-key" # Required (from Unsplash Developer portal)
 
   reddit:
     subreddit: "wallpapers" # Default subreddit

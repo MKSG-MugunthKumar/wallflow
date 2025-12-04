@@ -17,23 +17,49 @@ timer:
   start_delay: "1m"  # Delay after boot
 
 # Wallpaper sources
+# Available: local, wallhaven, picsum, apod, bing, reddit, earthview, unsplash
 sources:
-  default: "local"  # local, wallhaven, picsum
-  wallhaven:
-    api_key: ""  # Optional for rate limits
-    resolution: "2560x1440"
-    quality: "large"  # large, medium, small
-    purity: ["sfw"]  # sfw, sketchy, nsfw
-    categories: ["general", "nature", "night", "skyline", "beach", "sunset"]  # general, anime, people
-  picsum:
-    width: 2560
-    height: 1440
-  apod:
-    url: "https://api.nasa.gov/planetary/apod"
-    api_key: "DEMO_KEY"  # Replace with your NASA API key
+  default: "local"
+
+  # Local wallpaper collection
   local:
     recursive: true  # Search subdirectories
     formats: ["jpg", "jpeg", "png", "webp"]
+
+  # Wallhaven - curated wallpapers with search
+  # CLI: wallflow wallhaven [search terms]
+  wallhaven:
+    api_key: ""  # Optional, required for NSFW content
+    resolution: "2560x1440"  # Or leave empty for auto-detect
+    quality: "large"  # large, medium, small
+    purity: ["sfw"]  # sfw, sketchy, nsfw
+    categories: ["general"]  # general, anime, people (or search terms like "nature", "night")
+
+  # Picsum - random placeholder photos
+  # CLI: wallflow picsum
+  picsum:
+    width: 2560  # Or leave empty for auto-detect
+    height: 1440
+
+  # NASA Astronomy Picture of the Day
+  # CLI: wallflow apod
+  apod:
+    url: "https://api.nasa.gov/planetary/apod"
+    api_key: "DEMO_KEY"  # Replace with your NASA API key for higher rate limits
+
+  # Unsplash - high-resolution photos
+  # CLI: wallflow unsplash [search topics]
+  unsplash:
+    access_key: ""  # Required - get one at https://unsplash.com/developers
+
+  # Reddit - wallpapers from subreddits
+  # CLI: wallflow reddit [subreddit]
+  reddit:
+    subreddit: "wallpapers"  # Default subreddit (can also use "wallpapers+earthporn")
+
+  # Note: bing and earthview require no configuration
+  # CLI: wallflow bing      - Bing Photo of the Day
+  # CLI: wallflow earthview - Google Earth satellite imagery
 
 # Cleanup management
 cleanup:

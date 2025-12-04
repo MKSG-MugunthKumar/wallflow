@@ -1,7 +1,7 @@
 //! Unsplash high-resolution photo downloader
 //!
 //! Downloads high-quality photos from Unsplash.com.
-//! Requires an API key (get one at https://unsplash.com/developers).
+//! Requires an Access Key (get one at https://unsplash.com/developers).
 
 use super::client::WallflowClient as Client;
 use super::filesystem::FilesystemHelper;
@@ -63,26 +63,26 @@ impl WallpaperDownloader for UnsplashDownloader {
   async fn download(&self, config: &Config, query: &[String]) -> Result<Wallpaper> {
     let unsplash_config = &config.sources.unsplash;
 
-    // API key is required for Unsplash
-    let api_key = unsplash_config.api_key.as_ref().ok_or_else(|| {
+    // Access Key is required for Unsplash (used as client_id)
+    let access_key = unsplash_config.access_key.as_ref().ok_or_else(|| {
       anyhow!(
-        "Unsplash requires an API key. Get one at https://unsplash.com/developers and add it to config:\n\
-         sources:\n  unsplash:\n    api_key: \"your-api-key\""
+        "Unsplash requires an Access Key. Get one at https://unsplash.com/developers and add it to config:\n\
+         sources:\n  unsplash:\n    access_key: \"your-access-key\""
       )
     })?;
 
-    if api_key.is_empty() {
-      return Err(anyhow!("Unsplash API key is empty"));
+    if access_key.is_empty() {
+      return Err(anyhow!("Unsplash access_key is empty"));
     }
 
     debug!("Fetching random photo from Unsplash");
 
     let client = Client::from(&config.advanced);
 
-    // Build request with query parameters
+    // Build request with query parameters (access_key is used as client_id)
     let mut request = client
       .get(UNSPLASH_API_URL)
-      .query(&[("client_id", api_key.as_str()), ("count", "10"), ("orientation", "landscape")]);
+      .query(&[("client_id", access_key.as_str()), ("count", "10"), ("orientation", "landscape")]);
 
     // Add search query if provided
     let search_query = query.join(" ");
@@ -97,7 +97,7 @@ impl WallpaperDownloader for UnsplashDownloader {
       let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
 
       if status.as_u16() == 401 {
-        return Err(anyhow!("Unsplash API key is invalid. Check your configuration."));
+        return Err(anyhow!("Unsplash access_key is invalid. Check your configuration."));
       }
       if status.as_u16() == 403 {
         return Err(anyhow!("Unsplash rate limit exceeded. Try again later."));

@@ -108,9 +108,9 @@ pub struct LocalConfig {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 pub struct UnsplashConfig {
-  /// API key from https://unsplash.com/developers
+  /// Access Key from https://unsplash.com/developers (used as client_id)
   #[serde(default)]
-  pub api_key: Option<String>,
+  pub access_key: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
