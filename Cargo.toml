@@ -1,17 +1,36 @@
 [package]
-name = "wallflow"
-version = "0.1.0"
-edition = "2024"
-authors = ["MK <mksg@mk.sg>"]
+authors = ["Mugunth (MK) Kumar <mk@mk.sg>"]
+categories = ["command-line-utilities", "multimedia::images"]
 description = "Elegant wallpaper management with smooth transitions, powered by awww"
+edition = "2024"
+keywords = ["wallpaper", "desktop", "linux", "wayland", "ricing"]
 license = "MIT"
+name = "wallflow"
+readme = "README.md"
 repository = "https://github.com/MKSG-MugunthKumar/wallflow"
-
+version = "0.1.0"
 
 
 [package.metadata.bundle]
-identifier = "sg.mk.wallflow"
 category = "Graphics & Design"
+identifier = "sg.mk.wallflow"
+
+# cargo-binstall support - allows `cargo binstall wallflow`
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/wallflow-{ target }{ archive-suffix }"
+pkg-fmt = "bin"
+
+[package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/wallflow-x86_64-unknown-linux-gnu"
+
+[package.metadata.binstall.overrides.aarch64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/wallflow-aarch64-unknown-linux-gnu"
+
+[package.metadata.binstall.overrides.x86_64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/wallflow-x86_64-apple-darwin"
+
+[package.metadata.binstall.overrides.aarch64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/wallflow-aarch64-apple-darwin"
 
 [[bin]]
 name = "wallflow"
@@ -19,10 +38,14 @@ path = "src/main.rs"
 
 [dependencies]
 # CLI argument parsing
-clap = { version = "4.4", features = ["derive"] }
+clap = { version = "4.4", features = [
+  "derive",
+] }
 
 # Configuration and serialization
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = [
+  "derive",
+] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 
@@ -31,20 +54,30 @@ anyhow = "1.0"
 
 # Logging
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = [
+  "env-filter",
+] }
 
 # System directories (XDG compliance)
 dirs = "5.0"
 
 # Async runtime (for future HTTP downloads)
-tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "process", "time", "fs"] }
+tokio = { version = "1.0", features = [
+  "fs",
+  "macros",
+  "process",
+  "rt-multi-thread",
+  "time",
+] }
 
 # Async traits for backend system
 async-trait = "0.1"
 
 # HTTP client (for wallhaven/picsum)
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = [
+  "json",
+] }
 
 # Random selection
 rand = "0.8"
@@ -57,7 +90,9 @@ shellexpand = "3.1"
 which = "4.4"
 
 # Date/time handling for file naming
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { version = "0.4", features = [
+  "serde",
+] }
 
 # Image processing and metadata
 imagesize = "0.12"
@@ -66,30 +101,42 @@ imagesize = "0.12"
 daemonize = "0.5"
 
 # Terminal User Interface
-ratatui = "0.28"
 crossterm = "0.28"
+ratatui = "0.28"
 
 [dev-dependencies]
-tempfile = "3.8"
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
+tempfile = "3.8"
 
 [workspace.lints.clippy]
-too_many_arguments = "allow"
 missing_errors_doc = "allow"
+too_many_arguments = "allow"
 
 [workspace.lints.rust]
 unused_must_use = "warn"
 
 # Debian package configuration
 [package.metadata.deb]
-maintainer = "MK <mksg@mk.sg>"
+assets = [
+  [
+    "644",
+    "README.md",
+    "usr/share/doc/wallflow/",
+  ],
+  [
+    "644",
+    "config.example.yml",
+    "usr/share/doc/wallflow/",
+  ],
+  [
+    "755",
+    "target/release/wallflow",
+    "usr/bin/",
+  ],
+]
 copyright = "2024, MK <mksg@mk.sg>"
-license-file = ["LICENSE", "4"]
 depends = "$auto, awww"
-recommends = "python3-pywal"
-section = "graphics"
-priority = "optional"
 description = """
 Elegant wallpaper management with smooth transitions.
 wallflow brings fluidity to your desktop with beautiful wallpaper
@@ -97,42 +144,45 @@ transitions, dynamic color schemes, and seamless desktop integration.
 Supports multiple wallpaper sources including local files, Wallhaven,
 and Picsum, with automatic color scheme generation via pywal.
 """
-assets = [
-  ["target/release/wallflow", "usr/bin/", "755"],
-  ["config.example.yml", "usr/share/doc/wallflow/", "644"],
-  ["README.md", "usr/share/doc/wallflow/", "644"],
+license-file = [
+  "4",
+  "LICENSE",
 ]
+maintainer = "MK <mksg@mk.sg>"
 maintainer-scripts = "debian/"
+priority = "optional"
+recommends = "python3-pywal"
+section = "graphics"
 systemd-units = { enable = false }
 
 # RPM package configuration
 [package.metadata.rpm]
-package = "wallflow"
-version = "0.1.0"
-summary = "Elegant wallpaper management with smooth transitions"
 description = """
 wallflow brings fluidity to your desktop with beautiful wallpaper
 transitions, dynamic color schemes, and seamless desktop integration.
 Supports multiple wallpaper sources including local files, Wallhaven,
 and Picsum, with automatic color scheme generation via pywal.
 """
-license = "MIT"
 group = "Applications/Graphics"
+license = "MIT"
+package = "wallflow"
 requires = { awww = "*" }
 suggests = { python3-pywal = "*" }
+summary = "Elegant wallpaper management with smooth transitions"
+version = "0.1.0"
 
 # cargo-generate-rpm assets
 [[package.metadata.rpm.files]]
-source = "target/release/wallflow"
 dest = "/usr/bin/wallflow"
 mode = "755"
+source = "target/release/wallflow"
 
 [[package.metadata.rpm.files]]
-source = "config.example.yml"
 dest = "/usr/share/doc/wallflow/config.example.yml"
 mode = "644"
+source = "config.example.yml"
 
 [[package.metadata.rpm.files]]
-source = "README.md"
 dest = "/usr/share/doc/wallflow/README.md"
 mode = "644"
+source = "README.md"

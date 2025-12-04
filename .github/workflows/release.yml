@@ -1,17 +1,131 @@
 name: Release
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
-  dist:
-    runs-on: ubuntu-latest
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
       - name: Install Rust
-        run: rustup toolchain install stable --profile minimal
-      - name: Install cargo-dist
-        run: cargo install cargo-dist
-      - name: Build distributions
-        run: cargo dist build --tag=${{ github.ref_name }}
-      - name: Upload binaries
-        run: cargo dist upload --tag=${{ github.ref_name }}
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross-compilation tools (Linux ARM64)
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build
+        run: |
+          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
+            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+          fi
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Strip binary (Linux/macOS)
+        run: |
+          cd target/${{ matrix.target }}/release
+          if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
+            aarch64-linux-gnu-strip wallflow || true
+          else
+            strip wallflow || true
+          fi
+
+      - name: Create archive
+        run: |
+          cd target/${{ matrix.target }}/release
+          cp wallflow wallflow-${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wallflow-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/wallflow-${{ matrix.target }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "Changes since $PREV_TAG:" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git log --pretty=format:"- %s" $PREV_TAG..HEAD >> CHANGELOG.md
+          else
+            echo "Initial release" > CHANGELOG.md
+          fi
+
+          echo "" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "## Installation" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "Download the appropriate binary for your platform:" >> CHANGELOG.md
+          echo "- **Linux x86_64**: \`wallflow-x86_64-unknown-linux-gnu\`" >> CHANGELOG.md
+          echo "- **Linux ARM64**: \`wallflow-aarch64-unknown-linux-gnu\`" >> CHANGELOG.md
+          echo "- **macOS Intel**: \`wallflow-x86_64-apple-darwin\`" >> CHANGELOG.md
+          echo "- **macOS Apple Silicon**: \`wallflow-aarch64-apple-darwin\`" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "Then make it executable and move to your PATH:" >> CHANGELOG.md
+          echo "\`\`\`bash" >> CHANGELOG.md
+          echo "chmod +x wallflow-*" >> CHANGELOG.md
+          echo "mv wallflow-* ~/.local/bin/wallflow" >> CHANGELOG.md
+          echo "\`\`\`" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "Or update an existing installation:" >> CHANGELOG.md
+          echo "\`\`\`bash" >> CHANGELOG.md
+          echo "wallflow update" >> CHANGELOG.md
+          echo "\`\`\`" >> CHANGELOG.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG.md
+          files: |
+            artifacts/wallflow-x86_64-unknown-linux-gnu/wallflow-x86_64-unknown-linux-gnu
+            artifacts/wallflow-aarch64-unknown-linux-gnu/wallflow-aarch64-unknown-linux-gnu
+            artifacts/wallflow-x86_64-apple-darwin/wallflow-x86_64-apple-darwin
+            artifacts/wallflow-aarch64-apple-darwin/wallflow-aarch64-apple-darwin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

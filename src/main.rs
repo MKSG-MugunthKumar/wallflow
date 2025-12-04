@@ -11,6 +11,7 @@ mod integration;
 mod logging;
 mod platform;
 mod tui;
+mod updater;
 mod wallpaper;
 
 use config::Config;
@@ -84,6 +85,12 @@ enum Commands {
   ListSources,
   /// Launch interactive TUI for wallpaper browsing
   Tui,
+  /// Check for updates and optionally install them
+  Update {
+    /// Only check for updates, don't install
+    #[arg(short, long)]
+    check: bool,
+  },
 }
 
 #[tokio::main]
@@ -195,6 +202,53 @@ async fn main() -> Result<()> {
     Commands::Tui => {
       info!("🎨 Launching TUI wallpaper browser");
       tui::run_with_default_terminal(config).await?;
+    }
+    Commands::Update { check } => {
+      handle_update(check).await?;
+    }
+  }
+
+  Ok(())
+}
+
+async fn handle_update(check_only: bool) -> Result<()> {
+  // Check if self-update is possible
+  if !updater::can_self_update() {
+    println!("Self-update is disabled.");
+    println!("wallflow appears to be installed via a package manager.");
+    println!("Please update using your package manager instead.");
+    return Ok(());
+  }
+
+  println!("Checking for updates...");
+
+  match updater::check_for_updates().await {
+    Ok(check) => {
+      if check.update_available {
+        println!("Update available: v{} -> v{}", check.current, check.latest);
+
+        if check_only {
+          println!("\nRun 'wallflow update' to install the update.");
+        } else {
+          println!("\nDownloading and installing update...");
+          match updater::perform_update().await {
+            Ok(version) => {
+              println!("Downloaded v{}", version);
+              updater::apply_update()?;
+            }
+            Err(e) => {
+              println!("Failed to download update: {}", e);
+              return Err(e);
+            }
+          }
+        }
+      } else {
+        println!("You're up to date! (v{})", check.current);
+      }
+    }
+    Err(e) => {
+      println!("Failed to check for updates: {}", e);
+      println!("Check your internet connection or try again later.");
     }
   }
 
