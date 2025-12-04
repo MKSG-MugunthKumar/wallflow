@@ -6,7 +6,7 @@ use tracing::{debug, warn};
 /// Generate pywal color scheme
 pub async fn generate_pywal_colors(wallpaper_path: &Path, config: &Config) {
   let mut cmd = AsyncCommand::new("wal");
-  cmd.args(["-t", "-ni", &wallpaper_path.to_string_lossy()]);
+  cmd.args(["-sni", &wallpaper_path.to_string_lossy()]);
 
   if config.integration.pywal.backend.is_some() {
     cmd.args(["--backend", config.integration.pywal.backend.as_ref().unwrap(), "--vte"]);

@@ -40,12 +40,32 @@ struct Cli {
 enum Commands {
   /// Set wallpaper from local collection
   Local,
-  /// Download and set wallpaper from Wallhaven
-  Wallhaven,
+  /// Download and set wallpaper from Wallhaven (accepts search terms)
+  Wallhaven {
+    /// Search terms (e.g., "nature mountains")
+    #[arg(trailing_var_arg = true)]
+    query: Vec<String>,
+  },
   /// Set random photo from Picsum
   Picsum,
   /// Download NASA Astronomy Picture of the Day
   Apod,
+  /// Download Bing Photo of the Day
+  Bing,
+  /// Download wallpaper from Reddit (accepts subreddit name)
+  Reddit {
+    /// Subreddit name (e.g., "earthporn", "wallpapers+cityporn")
+    #[arg(trailing_var_arg = true)]
+    query: Vec<String>,
+  },
+  /// Download satellite imagery from Google Earth View
+  Earthview,
+  /// Download high-resolution photo from Unsplash (accepts search topics)
+  Unsplash {
+    /// Search topics (e.g., "nature", "architecture")
+    #[arg(trailing_var_arg = true)]
+    query: Vec<String>,
+  },
   /// Run as background daemon with automatic rotation
   Daemon {
     /// Run in foreground (don't daemonize)
@@ -91,14 +111,26 @@ async fn main() -> Result<()> {
     Commands::Local => {
       wallpaper::set_local(&config).await?;
     }
-    Commands::Wallhaven => {
-      wallpaper::set_wallhaven(&config).await?;
+    Commands::Wallhaven { query } => {
+      wallpaper::set_from_source(&config, "wallhaven", &query).await?;
     }
     Commands::Picsum => {
-      wallpaper::set_picsum(&config).await?;
+      wallpaper::set_from_source(&config, "picsum", &[]).await?;
     }
     Commands::Apod => {
-      wallpaper::set_apod(&config).await?;
+      wallpaper::set_from_source(&config, "apod", &[]).await?;
+    }
+    Commands::Bing => {
+      wallpaper::set_from_source(&config, "bing", &[]).await?;
+    }
+    Commands::Reddit { query } => {
+      wallpaper::set_from_source(&config, "reddit", &query).await?;
+    }
+    Commands::Earthview => {
+      wallpaper::set_from_source(&config, "earthview", &[]).await?;
+    }
+    Commands::Unsplash { query } => {
+      wallpaper::set_from_source(&config, "unsplash", &query).await?;
     }
     Commands::Daemon { foreground } => {
       if foreground {
@@ -122,12 +154,18 @@ async fn main() -> Result<()> {
       println!("  # Start daemon (foreground for testing)");
       println!("  wallflow daemon --foreground");
       println!();
-      println!("  # Download from Wallhaven");
-      println!("  wallflow wallhaven nature");
+      println!("  # Download from various sources");
+      println!("  wallflow wallhaven nature mountains");
+      println!("  wallflow reddit earthporn");
+      println!("  wallflow unsplash architecture");
+      println!("  wallflow bing");
+      println!("  wallflow earthview");
+      println!("  wallflow apod");
       println!();
       println!("  # Check platform and backends");
       println!("  wallflow platform-info");
       println!("  wallflow list-backends");
+      println!("  wallflow list-sources");
       println!();
       println!("  # Add to your shell startup script for auto-start:");
       println!("  echo 'wallflow daemon &' >> ~/.zshrc");

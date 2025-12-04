@@ -1,6 +1,10 @@
 use super::apod::ApodDownloader;
+use super::bing::BingDownloader;
+use super::earthview::EarthViewDownloader;
 use super::picsum::PicsumDownloader;
+use super::reddit::RedditDownloader;
 use super::traits::WallpaperDownloader;
+use super::unsplash::UnsplashDownloader;
 use super::wallhaven::WallhavenDownloader;
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
@@ -24,7 +28,11 @@ impl DownloaderRegistry {
   /// Register all built-in downloaders
   fn register_builtin_downloaders(&mut self) {
     self.register_downloader(Arc::new(ApodDownloader));
+    self.register_downloader(Arc::new(BingDownloader));
+    self.register_downloader(Arc::new(EarthViewDownloader));
     self.register_downloader(Arc::new(PicsumDownloader));
+    self.register_downloader(Arc::new(RedditDownloader));
+    self.register_downloader(Arc::new(UnsplashDownloader));
     self.register_downloader(Arc::new(WallhavenDownloader));
   }
 

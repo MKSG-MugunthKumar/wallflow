@@ -88,14 +88,20 @@ impl WallhavenDownloader {
 
 #[async_trait]
 impl WallpaperDownloader for WallhavenDownloader {
-  async fn download(&self, config: &Config) -> Result<Wallpaper> {
+  /// Download a wallpaper from Wallhaven
+  /// Query parameters are used as search terms (e.g., "wallflow wallhaven nature mountains")
+  async fn download(&self, config: &Config, query: &[String]) -> Result<Wallpaper> {
     let wallhaven_config = &config.sources.wallhaven;
     let resolution = config.get_wallhaven_resolution()?;
 
     // Build query parameters
     let purity = Self::purity_to_bitmask(&wallhaven_config.purity);
     let categories = Self::categories_to_bitmask(&wallhaven_config.categories);
-    let search_query = Self::build_search_query(&wallhaven_config.q, &wallhaven_config.categories);
+
+    // CLI query takes precedence over config query
+    let cli_query = query.join(" ");
+    let base_query = if cli_query.is_empty() { &wallhaven_config.q } else { &cli_query };
+    let search_query = Self::build_search_query(base_query, &wallhaven_config.categories);
     let resolution_str = format!("{}x{}", resolution.width, resolution.height);
 
     debug!(

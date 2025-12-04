@@ -18,7 +18,8 @@ pub struct Wallpaper {
 #[async_trait]
 pub trait WallpaperDownloader {
   /// Download a wallpaper based on the request
-  async fn download(&self, config: &Config) -> Result<Wallpaper>;
+  /// The `query` parameter contains additional CLI arguments (e.g., search terms, subreddit names)
+  async fn download(&self, config: &Config, query: &[String]) -> Result<Wallpaper>;
 
   /// Get the source name for this downloader
   fn source_name(&self) -> &'static str;

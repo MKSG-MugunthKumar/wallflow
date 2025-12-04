@@ -1,11 +1,50 @@
-# Downloaders - Next Steps
+# Downloaders - Implementation Status
 
-## New Backends to Implement
+## Implemented Sources
 
-- [ ] Wallhaven (API with search/categories)
-- [ ] Bing Daily (simple JSON API)
-- [ ] Reddit (r/wallpapers, r/earthporn)
-- [ ] Unsplash (requires API key)
+- [x] **Local** - Local wallpaper collection
+- [x] **Wallhaven** - API with search/categories, optional API key
+- [x] **Picsum** - Random photos from Lorem Picsum
+- [x] **APOD** - NASA Astronomy Picture of the Day
+- [x] **Bing** - Bing Photo of the Day (daily curated images)
+- [x] **Reddit** - Subreddit wallpapers (r/wallpapers, r/earthporn, etc.)
+- [x] **Earth View** - Google satellite imagery
+- [x] **Unsplash** - High-resolution photos (requires API key)
+
+## CLI Usage
+
+```bash
+# Sources that accept search queries
+wallflow wallhaven nature mountains
+wallflow reddit earthporn
+wallflow unsplash architecture
+
+# Sources with daily/curated content (no query needed)
+wallflow bing
+wallflow earthview
+wallflow apod
+wallflow picsum
+```
+
+## Configuration
+
+Sources can be configured in `~/.config/wallflow/config.yml`:
+
+```yaml
+sources:
+  default: local
+
+  wallhaven:
+    api_key: "your-api-key" # Optional, for NSFW content
+    purity: [sfw]
+    categories: [general]
+
+  unsplash:
+    api_key: "your-api-key" # Required
+
+  reddit:
+    subreddit: "wallpapers" # Default subreddit
+```
 
 ## Plugin Architecture
 

@@ -18,7 +18,9 @@ pub struct PicsumDownloader;
 
 #[async_trait]
 impl WallpaperDownloader for PicsumDownloader {
-  async fn download(&self, config: &Config) -> Result<Wallpaper> {
+  /// Download a random image from Picsum
+  /// Note: Picsum ignores query parameters as it always returns a random image
+  async fn download(&self, config: &Config, _query: &[String]) -> Result<Wallpaper> {
     let resolution = config.get_picsum_resolution()?;
     let url = format!("https://picsum.photos/{}/{}", resolution.width, resolution.height);
 

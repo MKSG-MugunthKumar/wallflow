@@ -56,7 +56,8 @@ pub struct ApodDownloader;
 #[async_trait]
 impl WallpaperDownloader for ApodDownloader {
   /// Fetch APOD data from NASA API
-  async fn download(&self, config: &Config) -> Result<Wallpaper> {
+  /// Note: APOD ignores query parameters as it always returns the picture of the day
+  async fn download(&self, config: &Config, _query: &[String]) -> Result<Wallpaper> {
     debug!("Fetching APOD data from NASA API");
     let client = Client::from(&config.advanced);
     let url = config.sources.apod.url.clone();

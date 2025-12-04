@@ -114,10 +114,12 @@ pub async fn run_background(config: Config) -> Result<()> {
 
 /// Set wallpaper based on configured default source
 async fn set_wallpaper_by_source(config: &Config) -> Result<()> {
-  match config.sources.default.as_str() {
+  let source = config.sources.default.as_str();
+  match source {
     "local" => wallpaper::set_local(config).await,
-    "wallhaven" => wallpaper::set_wallhaven(config).await,
-    "picsum" => wallpaper::set_picsum(config).await,
+    // All remote sources use the generic set_from_source with empty query
+    // (daemon uses config defaults, not CLI args)
+    "wallhaven" | "picsum" | "apod" | "bing" | "reddit" | "earthview" | "unsplash" => wallpaper::set_from_source(config, source, &[]).await,
     other => {
       warn!("Unknown source '{}', falling back to local", other);
       wallpaper::set_local(config).await

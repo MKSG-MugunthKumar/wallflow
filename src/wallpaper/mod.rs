@@ -95,41 +95,20 @@ pub fn platform_info() -> Result<String> {
   Ok(info)
 }
 
-//
-// Legacy API compatibility functions (preserve existing CLI behavior)
-//
+/// Download and set wallpaper from any registered source
+/// The `query` parameter contains additional arguments (e.g., search terms, subreddit names)
+pub async fn set_from_source(config: &Config, source: &str, query: &[String]) -> Result<()> {
+  info!("Downloading wallpaper from {}", source);
+  let wallpaper = crate::downloaders::download_from_source(source, config, query).await?;
+  debug!("Downloaded: {:?}", wallpaper);
+  apply_wallpaper(&wallpaper.file_path, config).await?;
+  Ok(())
+}
 
-/// Set wallpaper from local collection (legacy API)
+/// Set wallpaper from local collection
 pub async fn set_local(config: &Config) -> Result<()> {
   let wallpaper_path = select_local_wallpaper(config)?;
   apply_wallpaper(&wallpaper_path, config).await?;
-  Ok(())
-}
-
-/// Download and set wallpaper from Wallhaven
-pub async fn set_wallhaven(config: &Config) -> Result<()> {
-  info!("Downloading wallpaper from Wallhaven");
-  let wallpaper = crate::downloaders::download_from_source("wallhaven", config).await?;
-  debug!("Downloaded: {:?}", wallpaper);
-  apply_wallpaper(&wallpaper.file_path, config).await?;
-  Ok(())
-}
-
-/// Download random photo from Picsum
-pub async fn set_picsum(config: &Config) -> Result<()> {
-  info!("Downloading wallpaper from Picsum");
-  let wallpaper = crate::downloaders::download_from_source("picsum", config).await?;
-  debug!("Downloaded: {:?}", wallpaper);
-  apply_wallpaper(&wallpaper.file_path, config).await?;
-  Ok(())
-}
-
-/// Download and set wallpaper from NASA APOD (new downloader system)
-pub async fn set_apod(config: &Config) -> Result<()> {
-  info!("Downloading wallpaper from NASA APOD");
-  let wallpaper = crate::downloaders::download_from_source("apod", config).await?;
-  debug!("Downloaded: {:?}", wallpaper);
-  apply_wallpaper(&wallpaper.file_path, config).await?;
   Ok(())
 }
 

@@ -58,6 +58,10 @@ pub struct SourcesConfig {
   pub local: LocalConfig,
   #[serde(default)]
   pub apod: ApodConfig,
+  #[serde(default)]
+  pub unsplash: UnsplashConfig,
+  #[serde(default)]
+  pub reddit: RedditConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -100,6 +104,24 @@ pub struct LocalConfig {
   pub recursive: bool,
   #[serde(default = "default_formats")]
   pub formats: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+pub struct UnsplashConfig {
+  /// API key from https://unsplash.com/developers
+  #[serde(default)]
+  pub api_key: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+pub struct RedditConfig {
+  /// Default subreddit(s) to use (e.g., "wallpapers" or "wallpapers+earthporn")
+  #[serde(default = "default_reddit_subreddit")]
+  pub subreddit: String,
+}
+
+fn default_reddit_subreddit() -> String {
+  "wallpapers".to_string()
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -273,6 +295,8 @@ impl Default for Config {
         picsum: PicsumConfig::default(),
         local: LocalConfig::default(),
         apod: ApodConfig::default(),
+        unsplash: UnsplashConfig::default(),
+        reddit: RedditConfig::default(),
       },
       cleanup: CleanupConfig {
         keep_count: 10,
