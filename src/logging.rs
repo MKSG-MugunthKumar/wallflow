@@ -52,10 +52,13 @@ pub fn init_logging(config: &Config, verbose_override: bool) -> Result<()> {
 
 /// Resolve the effective logging configuration considering CLI overrides
 fn resolve_logging_config(config: &LoggingConfig, verbose_override: bool) -> EffectiveLoggingConfig {
+  // Treat empty string as None (no file logging)
+  let file = config.file.as_ref().filter(|s| !s.trim().is_empty()).cloned();
+
   EffectiveLoggingConfig {
     enabled: config.enabled,
     level: if verbose_override { "debug".to_string() } else { config.level.clone() },
-    file: config.file.clone(),
+    file,
     timestamp: config.timestamp,
     verbose_override,
   }
@@ -247,5 +250,38 @@ mod tests {
     let effective = resolve_logging_config(&config, true);
     assert_eq!(effective.level, "debug");
     assert!(effective.verbose_override);
+  }
+
+  #[test]
+  fn test_resolve_logging_config_empty_file_path() {
+    // Empty string should be treated as None (no file logging)
+    let config = LoggingConfig {
+      enabled: true,
+      level: "info".to_string(),
+      file: Some("".to_string()),
+      timestamp: true,
+    };
+    let effective = resolve_logging_config(&config, false);
+    assert!(effective.file.is_none());
+
+    // Whitespace-only should also be treated as None
+    let config = LoggingConfig {
+      enabled: true,
+      level: "info".to_string(),
+      file: Some("   ".to_string()),
+      timestamp: true,
+    };
+    let effective = resolve_logging_config(&config, false);
+    assert!(effective.file.is_none());
+
+    // Valid path should be preserved
+    let config = LoggingConfig {
+      enabled: true,
+      level: "info".to_string(),
+      file: Some("/tmp/test.log".to_string()),
+      timestamp: true,
+    };
+    let effective = resolve_logging_config(&config, false);
+    assert_eq!(effective.file, Some("/tmp/test.log".to_string()));
   }
 }
