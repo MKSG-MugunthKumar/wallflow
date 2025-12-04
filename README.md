@@ -6,9 +6,11 @@ A modern, Rust-based wallpaper manager that brings fluidity to your Linux deskto
 
 ## About This Project
 
-This is my first Rust project. After 20+ years of programming (including C/C++), I decided to learn Rust by building something I'd actually use daily. wallflow started as a learning exercise and evolved into a full-featured wallpaper manager.
+This is my first Rust project. I decided to learn Rust by building something I'd actually use daily. wallflow started as a learning exercise and evolved into a reasonably decent wallpaper manager. While toying around with hyprland, I used [awww](https://codeberg.org/LGFae/awww) for smooth transitions and loved it. So I decided to do something like variety, but powered by aww so you have smooth transitions. KWin in KDE support wlr-layer-shell, and awww works perfectly. Sorry, GNOME.
 
-The codebase reflects this journey - you'll find clean, idiomatic Rust alongside comments and structure that helped me understand the language. If you're also learning Rust, feel free to explore, learn, and contribute!
+Thus, wallflow was born.
+
+The codebase reflects this journey and that means, it is not perfect. Use it at your own risk. But hey, it's open source! Feel free to contribute and help me improve it.
 
 ## Features
 
@@ -26,15 +28,14 @@ The codebase reflects this journey - you'll find clean, idiomatic Rust alongside
 - **Smart Features**
 
   - Built-in daemon for automatic wallpaper rotation
-  - Smooth animated transitions (via [awww](https://github.com/anyrun/awww))
+  - Smooth animated transitions (via [awww](https://codeberg.org/LGFae/awww))
   - Auto-resolution detection (xrandr, sway, wlr-randr)
   - Optional [pywal](https://github.com/dylanaraps/pywal) integration for dynamic color schemes
   - Self-update capability
 
 - **Desktop Support**
-  - Hyprland, Sway, and other wlroots compositors
-  - KDE Plasma
-  - GNOME
+  - [Hyprland](https://hyprland.org), Sway, and other wlroots compositors
+  - KDE Plasma (KWin supports wlr-layer-shell)
   - X11 (feh, nitrogen)
 
 ## Installation
@@ -58,7 +59,7 @@ mv wallflow-x86_64-unknown-linux-gnu ~/.local/bin/wallflow
 ### Fedora (COPR)
 
 ```bash
-sudo dnf copr enable mksg/wallflow
+sudo dnf copr enable uproar9991/wallflow
 sudo dnf install wallflow
 ```
 
@@ -98,23 +99,11 @@ wallflow update --check
 ## Configuration
 
 Configuration file: `~/.config/wallflow/config.yml`
+Create it by copying the example:
 
-```yaml
-paths:
-  local: ~/Pictures/Wallpapers
-  downloads: ~/Pictures/Downloads
-
-daemon:
-  interval: 1800 # 30 minutes
-  source: local # or wallhaven, reddit, etc.
-
-transition:
-  type: wipe
-  duration: 2
-
-integration:
-  pywal:
-    enabled: true
+```bash
+mkdir -p ~/.config/wallflow
+cp config.example.yml ~/.config/wallflow/config.yml
 ```
 
 See [config.example.yml](config.example.yml) for all options.
@@ -158,7 +147,7 @@ MIT - See [LICENSE](LICENSE)
 
 ## Acknowledgments
 
-- [awww](https://github.com/anyrun/awww) - Smooth wallpaper transitions
+- [awww](https://codeberg.org/LGFae/awww) - Smooth wallpaper transitions
 - [pywal](https://github.com/dylanaraps/pywal) - Color scheme generation
-- [ratatui](https://github.com/ratatui-org/ratatui) - TUI framework
+- [ratatui](https://github.com/ratatui-org/ratatui) - TUI framework (not yet)
 - The Rust community for excellent documentation and crates
