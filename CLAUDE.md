@@ -23,8 +23,6 @@ wallflow is a Rust-based wallpaper management tool that serves as a structured l
 - [docs/explore.md](docs/explore.md) - Real-world Rust ecosystem tour
 - [bin/wallflow-reference](bin/wallflow-reference) - HTTP API construction examples
 
-**Learning TODOs**: Key features are left as educational exercises with detailed implementation guidance:
-
 ```rust
 // Example: HTTP integration as learning opportunity
 pub async fn set_wallhaven(config: &Config, category: &str) -> Result<()> {
