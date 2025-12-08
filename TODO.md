@@ -31,27 +31,6 @@
 
 ### Layout
 
-```
-┌─────────────────────────────────────────────────────┐
-│ wallflow                              source: local │
-├─────────────────────────────────────────────────────┤
-│ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐    │
-│ │         │ │         │ │         │ │         │    │
-│ │  thumb  │ │  thumb  │ │  thumb  │ │  thumb  │    │
-│ │         │ │         │ │         │ │         │    │
-│ └─────────┘ └─────────┘ └─────────┘ └─────────┘    │
-│ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐    │
-│ │         │ │         │ │         │ │         │    │
-│ │  thumb  │ │  thumb  │ │  thumb  │ │  thumb  │    │
-│ │         │ │         │ │         │ │         │    │
-│ └─────────┘ └─────────┘ └─────────┘ └─────────┘    │
-├─────────────────────────────────────────────────────┤
-│ j/k: navigate  Enter: set  q: quit  /: search      │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
 ## Phase 2: Vim Keybindings
 
 - [x] j/k navigation (up/down)
@@ -59,8 +38,6 @@
 - [x] J/K for page up/down (10 items)
 - [ ] / for search with fuzzy matching
 - [ ] : for command mode
-- [ ] Visual selection with v
-- [ ] Marks with m and '
 
 ### Command Mode
 
@@ -74,59 +51,25 @@
 
 ---
 
-## Phase 3: Collection Management
-
-- [ ] Favorites list
-- [ ] Custom collections/albums
-- [ ] Tagging system
-- [ ] Smart collections (by color, resolution, source)
-- [ ] Import/export collections
-- [ ] Duplicate detection
-
----
-
-## Phase 4: Multi-Monitor Support
+## Phase 3: Multi-Monitor Support
 
 - [ ] Per-monitor wallpaper selection
-- [ ] Per-monitor rotation schedules
 - [ ] Span mode (single wallpaper across monitors)
-- [ ] Monitor arrangement visualization
 - [ ] Hot-reload on monitor connect/disconnect
+- [ ] Per virtual desktop wallpaper selection
+- [ ] Mac Support (Partial - In `feature/macOS` branch)
 
 ---
 
-## Phase 5: Advanced Features
+## Future Ideas: Collections, Plugins and Other Platforms
 
-### Preview System
-
-- [x] Real-time wallpaper preview before applying (p key)
-- [ ] Color scheme preview (pywal)
-- [ ] Side-by-side comparison
-- [ ] History with undo
-
-### Plugin System
-
+- [ ] Favorites list (Do not delete these when auto cleanup happens)
+- [ ] Windows Support
 - [ ] Custom wallpaper sources as plugins
-- [ ] Custom transition effects
-- [ ] Post-processing filters
 - [ ] Lua/WASM plugin API
-
-### Scheduling
-
 - [ ] Time-based wallpaper rules (day/night)
-- [ ] Calendar integration
 - [ ] Weather-based wallpapers
-- [ ] Location-aware themes
-
----
-
-## Future Ideas
-
-- [ ] Web UI for remote control
-- [ ] Mobile companion app
-- [ ] AI-powered wallpaper recommendations
-- [ ] Wallpaper generation with Stable Diffusion
-- [ ] Community wallpaper sharing
+- [ ] Festive aware themes
 - [ ] Screen lock integration
 - [ ] Live wallpapers (video/animated)
 
@@ -139,7 +82,6 @@
 - [ ] Logging improvements
 - [ ] Performance profiling
 - [ ] Documentation generation
-- [ ] CI/CD improvements
 
 ---
 
