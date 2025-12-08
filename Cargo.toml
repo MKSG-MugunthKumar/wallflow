@@ -1,14 +1,25 @@
 [package]
-authors = ["Mugunth (MK) Kumar <mk@mk.sg>"]
-categories = ["command-line-utilities", "multimedia::images"]
+authors = [
+  "Mugunth (MK) Kumar <mk@mk.sg>",
+]
+categories = [
+  "command-line-utilities",
+  "multimedia::images",
+]
 description = "Elegant wallpaper management with smooth transitions, powered by awww"
 edition = "2024"
-keywords = ["wallpaper", "desktop", "linux", "wayland", "ricing"]
+keywords = [
+  "desktop",
+  "linux",
+  "ricing",
+  "wallpaper",
+  "wayland",
+]
 license = "MIT"
 name = "wallflow"
 readme = "README.md"
 repository = "https://github.com/MKSG-MugunthKumar/wallflow"
-version = "0.1.0"
+version = "0.2.0"
 
 
 [package.metadata.bundle]
@@ -17,8 +28,8 @@ identifier = "sg.mk.wallflow"
 
 # cargo-binstall support - allows `cargo binstall wallflow`
 [package.metadata.binstall]
-pkg-url = "{ repo }/releases/download/v{ version }/wallflow-{ target }{ archive-suffix }"
 pkg-fmt = "bin"
+pkg-url = "{ repo }/releases/download/v{ version }/wallflow-{ target }{ archive-suffix }"
 
 [package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
 pkg-url = "{ repo }/releases/download/v{ version }/wallflow-x86_64-unknown-linux-gnu"
@@ -95,14 +106,16 @@ chrono = { version = "0.4", features = [
 ] }
 
 # Image processing and metadata
+image = "0.25"
 imagesize = "0.12"
+ratatui-image = "3"
 
 # Process daemonization
 daemonize = "0.5"
 
 # Terminal User Interface
 crossterm = "0.28"
-ratatui = "0.28"
+ratatui = "0.29"
 
 [dev-dependencies]
 quickcheck = "1.0"

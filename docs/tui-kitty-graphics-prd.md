@@ -584,10 +584,10 @@ pub struct BasicTui {
 
 **Deliverables**:
 
-- [ ] Basic three-panel layout
-- [ ] Keyboard navigation
-- [ ] Source listing
-- [ ] Status bar
+- [x] Basic three-panel layout
+- [x] Keyboard navigation
+- [x] Source listing (wallpaper list)
+- [x] Status bar
 
 ### Phase 2: Graphics Integration (Week 3-4)
 
@@ -610,10 +610,10 @@ pub fn display_kitty_image(path: &Path, area: Rect) -> Result<()> {
 
 **Deliverables**:
 
-- [ ] Kitty protocol implementation
-- [ ] ASCII art fallback
+- [x] Kitty protocol implementation (via ratatui-image)
+- [x] ASCII/text fallback for unsupported terminals
 - [ ] Image caching system
-- [ ] Performance optimization
+- [x] Async image loading
 
 ### Phase 3: Advanced Features (Week 5-6)
 
@@ -636,10 +636,10 @@ pub struct ImageLoader {
 
 **Deliverables**:
 
-- [ ] Lazy loading system
+- [x] Lazy loading system (async thumbnail loading)
 - [ ] Search and filtering
-- [ ] Preview modes
-- [ ] Configuration interface
+- [x] Preview mode
+- [x] Configuration display panel (with 'e' to edit in $EDITOR)
 
 ### Phase 4: Integration & Polish (Week 7-8)
 
@@ -662,8 +662,8 @@ pub async fn apply_wallpaper_from_tui(selection: &ImageInfo) -> Result<()> {
 
 **Deliverables**:
 
-- [ ] Wallpaper backend integration
-- [ ] Help system
+- [x] Wallpaper backend integration (apply wallpaper via TUI)
+- [x] Help system (? key)
 - [ ] Configuration persistence
 - [ ] Cross-platform testing
 

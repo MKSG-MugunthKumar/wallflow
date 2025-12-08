@@ -60,7 +60,6 @@ async fn handle_key_event(app: &mut App, key: KeyEvent) -> Result<bool> {
   match app.view_mode {
     ViewMode::Browse => handle_browse_keys(app, &key).await?,
     ViewMode::Preview => handle_preview_keys(app, &key).await?,
-    ViewMode::Settings => handle_settings_keys(app, &key).await?,
     ViewMode::Help => handle_help_keys(app, &key).await?,
   }
 
@@ -91,9 +90,6 @@ async fn handle_global_keys(app: &mut App, key: &KeyEvent) -> Result<bool> {
     // Mode switching
     (KeyModifiers::NONE, KeyCode::Char('?')) => {
       app.set_view_mode(ViewMode::Help);
-    }
-    (KeyModifiers::NONE, KeyCode::Char(',')) => {
-      app.set_view_mode(ViewMode::Settings);
     }
 
     // Clear messages
@@ -139,11 +135,13 @@ async fn handle_browse_keys(app: &mut App, key: &KeyEvent) -> Result<()> {
     // First/last navigation
     KeyCode::Char('g') => {
       app.selected = 0;
+      app.request_thumbnail();
       debug!("Jumped to first wallpaper");
     }
     KeyCode::Char('G') => {
       if !app.wallpapers.is_empty() {
         app.selected = app.wallpapers.len() - 1;
+        app.request_thumbnail();
         debug!("Jumped to last wallpaper");
       }
     }
@@ -154,6 +152,10 @@ async fn handle_browse_keys(app: &mut App, key: &KeyEvent) -> Result<()> {
     }
     KeyCode::Char('p') => {
       app.set_view_mode(ViewMode::Preview);
+    }
+    KeyCode::Char('e') => {
+      // Signal to open editor (handled by main loop)
+      app.open_editor = true;
     }
     KeyCode::Char('r') => {
       app.status_message = Some("Refreshing wallpapers...".to_string());
@@ -193,17 +195,6 @@ async fn handle_preview_keys(app: &mut App, key: &KeyEvent) -> Result<()> {
     }
 
     _ => {}
-  }
-
-  Ok(())
-}
-
-/// Handle keybindings in settings mode
-async fn handle_settings_keys(_app: &mut App, key: &KeyEvent) -> Result<()> {
-  if key.code == KeyCode::Esc {
-    // Settings-specific bindings would go here
-    // For now, just handle escape to return to browse
-    // Handled by global keys
   }
 
   Ok(())

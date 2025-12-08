@@ -7,17 +7,19 @@
 //! - Status bars and information displays
 //! - Color schemes and styling
 //! - Error and loading state visualization
+//! - Terminal image rendering with ratatui-image
 
 use ratatui::{
   prelude::*,
   style::{Color, Modifier, Style},
   widgets::{Block, Borders, Clear, Gauge, List, ListItem, ListState, Paragraph, Wrap},
 };
+use ratatui_image::StatefulImage;
 
 use super::app::{App, ViewMode, WallpaperItem, format_file_size};
 
 /// Main UI drawing function
-pub fn draw(f: &mut Frame, app: &App) {
+pub fn draw(f: &mut Frame, app: &mut App) {
   // Create main layout
   let chunks = Layout::default()
     .direction(Direction::Vertical)
@@ -35,7 +37,6 @@ pub fn draw(f: &mut Frame, app: &App) {
   match app.view_mode {
     ViewMode::Browse => draw_browse_mode(f, chunks[1], app),
     ViewMode::Preview => draw_preview_mode(f, chunks[1], app),
-    ViewMode::Settings => draw_settings_mode(f, chunks[1], app),
     ViewMode::Help => draw_help_mode(f, chunks[1], app),
   }
 
@@ -58,7 +59,6 @@ fn draw_title_bar(f: &mut Frame, area: Rect, app: &App) {
   let title = match app.view_mode {
     ViewMode::Browse => "🌊 wallflow - Browser",
     ViewMode::Preview => "🌊 wallflow - Preview",
-    ViewMode::Settings => "🌊 wallflow - Settings",
     ViewMode::Help => "🌊 wallflow - Help",
   };
 
@@ -70,7 +70,7 @@ fn draw_title_bar(f: &mut Frame, area: Rect, app: &App) {
 }
 
 /// Draw browse mode UI
-fn draw_browse_mode(f: &mut Frame, area: Rect, app: &App) {
+fn draw_browse_mode(f: &mut Frame, area: Rect, app: &mut App) {
   // Split into sidebar and main content
   let chunks = Layout::default()
     .direction(Direction::Horizontal)
@@ -83,7 +83,7 @@ fn draw_browse_mode(f: &mut Frame, area: Rect, app: &App) {
   // Draw wallpaper list
   draw_wallpaper_list(f, chunks[0], app);
 
-  // Draw details panel
+  // Draw details panel with thumbnail
   draw_details_panel(f, chunks[1], app);
 }
 
@@ -137,15 +137,19 @@ fn draw_wallpaper_list(f: &mut Frame, area: Rect, app: &App) {
 }
 
 /// Draw details panel for selected wallpaper
-fn draw_details_panel(f: &mut Frame, area: Rect, app: &App) {
-  // Split details panel into wallpaper details and daemon status
+fn draw_details_panel(f: &mut Frame, area: Rect, app: &mut App) {
+  // Split details panel into thumbnail, wallpaper details, and config
   let chunks = Layout::default()
     .direction(Direction::Vertical)
     .constraints([
-      Constraint::Percentage(70), // Wallpaper details
-      Constraint::Percentage(30), // Daemon status
+      Constraint::Percentage(40), // Thumbnail preview
+      Constraint::Percentage(25), // Wallpaper details
+      Constraint::Percentage(35), // Config summary
     ])
     .split(area);
+
+  // Thumbnail preview
+  draw_thumbnail(f, chunks[0], app);
 
   // Wallpaper details
   let wallpaper_content = if let Some(wallpaper) = app.selected_wallpaper() {
@@ -163,27 +167,60 @@ fn draw_details_panel(f: &mut Frame, area: Rect, app: &App) {
     )
     .wrap(Wrap { trim: true });
 
-  f.render_widget(wallpaper_details, chunks[0]);
+  f.render_widget(wallpaper_details, chunks[1]);
 
-  // Daemon status
-  let daemon_content = format_daemon_status(app);
-  let daemon_details = Paragraph::new(daemon_content)
+  // Config summary
+  let config_content = format_config_summary(app);
+  let config_panel = Paragraph::new(config_content)
     .block(
       Block::default()
         .borders(Borders::ALL)
-        .title("Daemon Status")
-        .title_style(Style::default().fg(Color::Yellow)),
+        .title("Config [e to edit]")
+        .title_style(Style::default().fg(Color::Green)),
     )
     .wrap(Wrap { trim: true });
 
-  f.render_widget(daemon_details, chunks[1]);
+  f.render_widget(config_panel, chunks[2]);
+}
+
+/// Draw thumbnail preview
+fn draw_thumbnail(f: &mut Frame, area: Rect, app: &mut App) {
+  let block = Block::default()
+    .borders(Borders::ALL)
+    .title("Preview")
+    .title_style(Style::default().fg(Color::Magenta));
+
+  let inner = block.inner(area);
+  f.render_widget(block, area);
+
+  // Try to render the image thumbnail
+  if let Some(ref mut image_state) = app.thumbnail_state {
+    let image_widget = StatefulImage::new(None);
+    f.render_stateful_widget(image_widget, inner, image_state);
+  } else if app.is_thumbnail_loading() {
+    // Image is being loaded in background
+    let placeholder = Paragraph::new("⏳ Loading...")
+      .style(Style::default().fg(Color::Yellow))
+      .alignment(Alignment::Center);
+    f.render_widget(placeholder, inner);
+  } else if app.supports_images() {
+    // Image picker available but no image loaded yet
+    let placeholder = Paragraph::new("No preview")
+      .style(Style::default().fg(Color::DarkGray))
+      .alignment(Alignment::Center);
+    f.render_widget(placeholder, inner);
+  } else {
+    // Terminal doesn't support image rendering
+    let placeholder = Paragraph::new("🖼️ Image preview\nnot supported\nin this terminal")
+      .style(Style::default().fg(Color::DarkGray))
+      .alignment(Alignment::Center);
+    f.render_widget(placeholder, inner);
+  }
 }
 
 /// Format wallpaper details for display
 fn format_wallpaper_details(wallpaper: &WallpaperItem) -> String {
   let mut details = vec![];
-
-  details.push(format!("📁 Name: {}", wallpaper.name));
   details.push(format!("📍 Path: {}", wallpaper.path.display()));
 
   if let Some(size) = wallpaper.size {
@@ -204,93 +241,57 @@ fn format_wallpaper_details(wallpaper: &WallpaperItem) -> String {
     details.push("✅ Currently active".to_string());
   }
 
-  details.join("\n\n")
+  details.join("\n")
 }
 
-/// Format daemon status for display
-fn format_daemon_status(app: &App) -> String {
-  if let Some(ref status) = app.daemon_status {
-    let mut details = vec![];
+/// Format config summary for display
+fn format_config_summary(app: &App) -> String {
+  let mut details = vec![];
+  details.push(format!("🎯 Source: {}", app.config.sources.default));
+  details.push(format!("⏱️  Interval: {}m", app.config.timer.interval));
+  details.push(format!("🔀 Randomize: {}", app.config.timer.randomize));
+  details.push(format!("🎨 Pywal: {}", if app.config.integration.pywal.enabled { "on" } else { "off" }));
+  details.push(format!("📂 Recursive: {}", if app.config.sources.local.recursive { "yes" } else { "no" }));
+  details.join("\n")
+}
 
-    if status.is_stale() {
-      details.push("🔴 Status: Offline (stale)".to_string());
+/// Draw preview mode UI - full screen image preview
+fn draw_preview_mode(f: &mut Frame, area: Rect, app: &mut App) {
+  let block = Block::default()
+    .borders(Borders::ALL)
+    .title("Preview - Press ENTER to apply, ESC to return")
+    .title_style(Style::default().fg(Color::Cyan));
+
+  let inner = block.inner(area);
+  f.render_widget(block, area);
+
+  // Try to render the full image preview
+  if let Some(ref mut image_state) = app.thumbnail_state {
+    let image_widget = StatefulImage::new(None);
+    f.render_stateful_widget(image_widget, inner, image_state);
+  } else if app.supports_images() {
+    let placeholder = Paragraph::new("Loading preview...")
+      .style(Style::default().fg(Color::DarkGray))
+      .alignment(Alignment::Center);
+    f.render_widget(placeholder, inner);
+  } else {
+    // Fallback for terminals without graphics support
+    let preview_text = if let Some(wallpaper) = app.selected_wallpaper() {
+      format!(
+        "🖼️  {}\n\nImage preview not supported in this terminal.\n\nPress ENTER to apply, ESC to return",
+        wallpaper.name
+      )
     } else {
-      details.push("🟢 Status: Online".to_string());
+      "No wallpaper selected".to_string()
+    };
 
-      let time_remaining = status.time_remaining_formatted();
-      details.push(format!("⏰ Next rotation: {}", time_remaining));
+    let preview = Paragraph::new(preview_text)
+      .style(Style::default().fg(Color::White))
+      .alignment(Alignment::Center)
+      .wrap(Wrap { trim: true });
 
-      details.push(format!("🔄 Interval: {}m", status.config.interval_minutes));
-
-      if let Some(ref current) = status.current_wallpaper {
-        let name = std::path::Path::new(current).file_name().and_then(|n| n.to_str()).unwrap_or("Unknown");
-        details.push(format!("🖼️  Current: {}", name));
-      }
-
-      details.push(format!("🎯 Source: {}", status.config.source));
-    }
-
-    details.join("\n")
-  } else {
-    "❓ Daemon status unknown\n\nNo daemon status file found.\nStart daemon with:\nwallflow daemon".to_string()
+    f.render_widget(preview, inner);
   }
-}
-
-/// Draw preview mode UI
-fn draw_preview_mode(f: &mut Frame, area: Rect, app: &App) {
-  // For now, show a placeholder for image preview
-  // Future implementation will use Kitty graphics protocol
-  let preview_text = if let Some(wallpaper) = app.selected_wallpaper() {
-    format!(
-      "🖼️  Preview Mode\n\n{}\n\n[Image preview will be implemented with Kitty graphics protocol]\n\nPress ENTER to apply, ESC to return",
-      wallpaper.name
-    )
-  } else {
-    "No wallpaper selected".to_string()
-  };
-
-  let preview = Paragraph::new(preview_text)
-    .block(
-      Block::default()
-        .borders(Borders::ALL)
-        .title("Preview")
-        .title_style(Style::default().fg(Color::Cyan)),
-    )
-    .style(Style::default().fg(Color::White))
-    .alignment(Alignment::Center)
-    .wrap(Wrap { trim: true });
-
-  f.render_widget(preview, area);
-}
-
-/// Draw settings mode UI
-fn draw_settings_mode(f: &mut Frame, area: Rect, app: &App) {
-  let settings_text = format!(
-    "⚙️  Settings\n\n\
-        Local Path: {}\n\
-        Downloads: {}\n\
-        Default Source: {}\n\
-        Formats: {}\n\
-        Recursive: {}\n\n\
-        [Settings editing will be implemented in future versions]\n\n\
-        Press ESC to return",
-    app.config.paths.local,
-    app.config.paths.downloads,
-    app.config.sources.default,
-    app.config.sources.local.formats.join(", "),
-    app.config.sources.local.recursive
-  );
-
-  let settings = Paragraph::new(settings_text)
-    .block(
-      Block::default()
-        .borders(Borders::ALL)
-        .title("Settings")
-        .title_style(Style::default().fg(Color::Cyan)),
-    )
-    .wrap(Wrap { trim: true });
-
-  f.render_widget(settings, area);
 }
 
 /// Draw help mode UI
@@ -306,11 +307,11 @@ fn draw_help_mode(f: &mut Frame, area: Rect, _app: &App) {
         Actions:\n\
         ENTER, SPC  Apply selected wallpaper\n\
         p           Preview mode\n\
+        e           Edit config in $EDITOR\n\
         r           Refresh wallpaper list\n\
         c           Clear messages\n\n\
         Modes:\n\
         ?           Show this help\n\
-        ,           Settings mode\n\
         ESC         Return to browse mode\n\n\
         Global:\n\
         q           Quit (from browse mode)\n\
@@ -353,9 +354,8 @@ fn draw_status_bar(f: &mut Frame, area: Rect, app: &App) {
 
   // Keybinding hints
   let hints = match app.view_mode {
-    ViewMode::Browse => "j/k: navigate | ENTER: apply | p: preview | r: refresh | ?: help | q: quit",
+    ViewMode::Browse => "j/k: navigate | ENTER: apply | p: preview | e: edit config | ?: help | q: quit",
     ViewMode::Preview => "j/k: navigate | ENTER: apply | ESC: back",
-    ViewMode::Settings => "ESC: back",
     ViewMode::Help => "ESC: back",
   };
 

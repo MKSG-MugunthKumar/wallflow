@@ -9,11 +9,13 @@
 
 use crate::daemon_status::{DaemonStatus, DaemonStatusManager};
 use anyhow::Result;
+use image::DynamicImage;
+use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
 use std::path::{Path, PathBuf};
-use tracing::{debug, warn};
+use tokio::sync::mpsc;
+use tracing::{debug, info, warn};
 
 /// Main application state
-#[derive(Debug)]
 pub struct App {
   /// Should the application exit?
   pub should_quit: bool,
@@ -39,11 +41,32 @@ pub struct App {
   /// Error state
   pub error_message: Option<String>,
 
+  /// Flag to signal editor should be opened (handled by main loop)
+  pub open_editor: bool,
+
   /// Daemon status tracking
   pub daemon_status: Option<DaemonStatus>,
 
   /// Daemon status manager
   daemon_status_manager: DaemonStatusManager,
+
+  /// Image picker for terminal graphics protocol detection
+  pub image_picker: Option<Picker>,
+
+  /// Current thumbnail image state for rendering
+  pub thumbnail_state: Option<StatefulProtocol>,
+
+  /// Index of wallpaper whose thumbnail is currently loaded
+  thumbnail_loaded_for: Option<usize>,
+
+  /// Index of wallpaper currently being loaded (async)
+  thumbnail_loading_for: Option<usize>,
+
+  /// Channel to receive loaded images from background task
+  image_rx: mpsc::Receiver<(usize, DynamicImage)>,
+
+  /// Channel to send image load requests
+  image_tx: mpsc::Sender<(usize, DynamicImage)>,
 }
 
 /// Wallpaper item with metadata
@@ -77,9 +100,6 @@ pub enum ViewMode {
   /// Preview selected wallpaper with details
   Preview,
 
-  /// Settings and configuration
-  Settings,
-
   /// Help screen with keybindings
   Help,
 }
@@ -92,6 +112,21 @@ impl App {
 
     let daemon_status_manager = DaemonStatusManager::new()?;
 
+    // Try to detect terminal graphics protocol
+    let image_picker = match Picker::from_query_stdio() {
+      Ok(picker) => {
+        info!("🖼️  Terminal graphics protocol detected: {:?}", picker.protocol_type());
+        Some(picker)
+      }
+      Err(e) => {
+        debug!("Terminal graphics not available: {}", e);
+        None
+      }
+    };
+
+    // Create channel for async image loading
+    let (image_tx, image_rx) = mpsc::channel(4);
+
     let mut app = Self {
       should_quit: false,
       config,
@@ -101,8 +136,15 @@ impl App {
       status_message: Some("Loading wallpapers...".to_string()),
       is_loading: true,
       error_message: None,
+      open_editor: false,
       daemon_status: None,
       daemon_status_manager,
+      image_picker,
+      thumbnail_state: None,
+      thumbnail_loaded_for: None,
+      thumbnail_loading_for: None,
+      image_rx,
+      image_tx,
     };
 
     // Load wallpapers in background
@@ -110,6 +152,9 @@ impl App {
 
     // Load daemon status
     app.update_daemon_status().await?;
+
+    // Request initial thumbnail (async)
+    app.request_thumbnail();
 
     app.is_loading = false;
     app.status_message = Some(format!("Found {} wallpapers", app.wallpapers.len()));
@@ -202,6 +247,7 @@ impl App {
       } else {
         self.selected - 1
       };
+      self.request_thumbnail();
     }
   }
 
@@ -209,7 +255,79 @@ impl App {
   pub fn select_next(&mut self) {
     if !self.wallpapers.is_empty() {
       self.selected = (self.selected + 1) % self.wallpapers.len();
+      self.request_thumbnail();
     }
+  }
+
+  /// Request thumbnail load for current selection (non-blocking)
+  pub fn request_thumbnail(&mut self) {
+    // Skip if we already have this thumbnail or it's already loading
+    if self.thumbnail_loaded_for == Some(self.selected) {
+      return;
+    }
+    if self.thumbnail_loading_for == Some(self.selected) {
+      return;
+    }
+    if self.image_picker.is_none() {
+      return;
+    }
+
+    let Some(wallpaper) = self.wallpapers.get(self.selected) else {
+      return;
+    };
+
+    // Clear old thumbnail immediately so "Loading..." shows
+    self.thumbnail_state = None;
+    self.thumbnail_loaded_for = None;
+
+    let index = self.selected;
+    let path = wallpaper.path.clone();
+    let tx = self.image_tx.clone();
+
+    self.thumbnail_loading_for = Some(index);
+
+    // Spawn background task to load image
+    tokio::spawn(async move {
+      let load_result = tokio::task::spawn_blocking(move || image::ImageReader::open(&path).ok().and_then(|r| r.decode().ok())).await;
+
+      if let Ok(Some(img)) = load_result {
+        let _ = tx.send((index, img)).await;
+      }
+    });
+  }
+
+  /// Poll for loaded images and update state (call from render loop)
+  pub fn poll_thumbnail(&mut self) {
+    // Check if an image was loaded
+    while let Ok((index, dyn_img)) = self.image_rx.try_recv() {
+      // Only use if it's still the selected wallpaper
+      if index == self.selected
+        && let Some(picker) = &mut self.image_picker
+      {
+        self.thumbnail_state = Some(picker.new_resize_protocol(dyn_img));
+        self.thumbnail_loaded_for = Some(index);
+        debug!("Loaded thumbnail for index: {}", index);
+      }
+      // Clear loading state if this was what we were waiting for
+      if self.thumbnail_loading_for == Some(index) {
+        self.thumbnail_loading_for = None;
+      }
+    }
+  }
+
+  /// Check if a thumbnail is currently loading
+  pub fn is_thumbnail_loading(&self) -> bool {
+    self.thumbnail_loading_for.is_some()
+  }
+
+  /// Check if terminal supports image rendering
+  pub fn supports_images(&self) -> bool {
+    self.image_picker.is_some()
+  }
+
+  /// Get config file path
+  pub fn config_path(&self) -> std::path::PathBuf {
+    crate::config::Config::default_path()
   }
 
   /// Get the currently selected wallpaper
@@ -279,25 +397,11 @@ impl App {
 
   /// Get formatted status information
   pub fn status_info(&self) -> String {
-    let mut parts = vec![
-      format!("{} wallpapers", self.wallpapers.len()),
-      format!("{} selected", self.selected + 1),
-      format!("Mode: {:?}", self.view_mode),
-    ];
-
-    // Add daemon status if available
-    if let Some(ref status) = self.daemon_status {
-      let daemon_info = if status.is_stale() {
-        "Daemon: Offline".to_string()
-      } else {
-        format!("Daemon: {} remaining", status.time_remaining_formatted())
-      };
-      parts.push(daemon_info);
-    } else {
-      parts.push("Daemon: Unknown".to_string());
+    match &self.daemon_status {
+      Some(status) if status.is_stale() => "Daemon: Offline".to_string(),
+      Some(status) => format!("Daemon: {} remaining", status.time_remaining_formatted()),
+      None => "Daemon: Unknown".to_string(),
     }
-
-    parts.join(" | ")
   }
 }
 

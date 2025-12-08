@@ -17,15 +17,17 @@
 
 ---
 
-## Phase 1: TUI Foundation
+## Phase 1: TUI Foundation ✅
 
 ### Basic Interface
 
-- [ ] Full-screen TUI with ratatui
-- [ ] Directory browser for local wallpapers
-- [ ] Thumbnail preview (sixel/kitty graphics protocol)
-- [ ] Status bar with current wallpaper info
-- [ ] Basic keyboard navigation
+- [x] Full-screen TUI with ratatui
+- [x] Directory browser for local wallpapers
+- [x] Thumbnail preview (Kitty/Sixel/iTerm2 via ratatui-image)
+- [x] Status bar with current wallpaper info
+- [x] Basic keyboard navigation (j/k, J/K, g/G)
+- [x] Config display panel with 'e' to edit in $EDITOR
+- [x] Help screen (? key)
 
 ### Layout
 
@@ -52,8 +54,9 @@
 
 ## Phase 2: Vim Keybindings
 
-- [ ] hjkl navigation
-- [ ] gg/G for top/bottom
+- [x] j/k navigation (up/down)
+- [x] g/G for top/bottom
+- [x] J/K for page up/down (10 items)
 - [ ] / for search with fuzzy matching
 - [ ] : for command mode
 - [ ] Visual selection with v
@@ -96,7 +99,7 @@
 
 ### Preview System
 
-- [ ] Real-time wallpaper preview before applying
+- [x] Real-time wallpaper preview before applying (p key)
 - [ ] Color scheme preview (pywal)
 - [ ] Side-by-side comparison
 - [ ] History with undo

@@ -73,7 +73,8 @@ pub async fn run_foreground(config: Config) -> Result<()> {
 }
 
 /// Run daemon in background (daemonize)
-pub async fn run_background(config: Config) -> Result<()> {
+/// Note: This function daemonizes first, then creates a new tokio runtime
+pub fn run_background(config: Config) -> Result<()> {
   // Create PID and log directories
   let home_dir = dirs::home_dir().context("Could not find home directory")?;
   let runtime_dir = home_dir.join(".local/share/wallflow");
@@ -96,17 +97,20 @@ pub async fn run_background(config: Config) -> Result<()> {
     .stderr(File::create(&stderr_file)?)
     .privileged_action(|| "Daemonizing wallflow");
 
-  // Fork into background
+  // Fork into background - parent returns immediately, child continues
   match daemonize.start() {
     Ok(_) => {
-      // We're now in the daemon process
-      info!("✅ Daemon started successfully");
+      // We're now in the daemon child process
+      // The parent's tokio runtime is gone, create a fresh one
+      let rt = tokio::runtime::Runtime::new().context("Failed to create tokio runtime")?;
 
       // Initialize logging for the daemon process
       tracing_subscriber::fmt().with_env_filter("wallflow=info").with_target(false).init();
 
-      // Run the daemon
-      run_foreground(config).await
+      info!("✅ Daemon process started (PID: {})", std::process::id());
+
+      // Run the daemon in the new runtime
+      rt.block_on(run_foreground(config))
     }
     Err(e) => {
       error!("Failed to daemonize: {}", e);

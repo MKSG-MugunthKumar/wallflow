@@ -143,7 +143,8 @@ async fn main() -> Result<()> {
       if foreground {
         daemon::run_foreground(config).await?;
       } else {
-        daemon::run_background(config).await?;
+        // run_background is sync - it daemonizes then creates its own tokio runtime
+        daemon::run_background(config)?;
       }
     }
     Commands::Config => {

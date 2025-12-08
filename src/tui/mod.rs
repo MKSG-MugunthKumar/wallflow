@@ -26,6 +26,7 @@ use crossterm::{
 };
 use ratatui::prelude::*;
 use std::io;
+use std::process::Command;
 
 /// Initialize and run the TUI application
 #[allow(dead_code)]
@@ -56,11 +57,19 @@ pub async fn run(config: crate::config::Config) -> Result<()> {
 /// Main application loop
 async fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
   loop {
+    // Poll for completed thumbnail loads
+    app.poll_thumbnail();
+
     // Draw UI
     terminal.draw(|f| ui::draw(f, app))?;
 
-    // Handle events
+    // Handle events (with short timeout to allow polling)
     if events::handle_events(app).await? {
+      break;
+    }
+
+    // Check if editor needs to be opened (return to outer loop)
+    if app.open_editor {
       break;
     }
   }
@@ -73,8 +82,46 @@ pub async fn run_with_default_terminal(config: crate::config::Config) -> Result<
   let mut terminal = ratatui::init();
   let mut app = App::new(config).await?;
 
-  let result = run_app(&mut terminal, &mut app).await;
+  loop {
+    let result = run_app(&mut terminal, &mut app).await;
 
-  ratatui::restore();
-  result
+    // Check if we need to open the editor
+    if app.open_editor {
+      app.open_editor = false;
+
+      // Restore terminal for editor
+      ratatui::restore();
+
+      // Open editor
+      let config_path = app.config_path();
+      let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
+
+      app.status_message = Some(format!("Opening {} in {}...", config_path.display(), editor));
+
+      let status = Command::new(&editor).arg(&config_path).status();
+
+      match status {
+        Ok(s) if s.success() => {
+          // Reload config after editing
+          if let Ok(new_config) = crate::config::Config::load(&config_path) {
+            app.config = new_config;
+            app.status_message = Some("Config reloaded".to_string());
+          }
+        }
+        Ok(_) => {
+          app.status_message = Some("Editor exited with error".to_string());
+        }
+        Err(e) => {
+          app.error_message = Some(format!("Failed to open editor: {}", e));
+        }
+      }
+
+      // Reinit terminal
+      terminal = ratatui::init();
+    } else {
+      // Normal exit
+      ratatui::restore();
+      return result;
+    }
+  }
 }

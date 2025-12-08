@@ -4,6 +4,7 @@ use super::traits::{WallpaperBackend, WallpaperOptions};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use std::path::{Path, PathBuf};
+use std::process::Stdio;
 use tokio::process::Command as AsyncCommand;
 use tracing::{debug, warn};
 
@@ -50,6 +51,11 @@ impl WallpaperBackend for AwwwBackend {
       options.transition,
       options.fps
     );
+
+    // Suppress awww's TTY output (progress animations)
+    cmd.stdin(Stdio::null());
+    cmd.stdout(Stdio::null());
+    cmd.stderr(Stdio::piped()); // Keep stderr for error reporting
 
     let output = cmd.output().await.context("Failed to execute awww command")?;
 
