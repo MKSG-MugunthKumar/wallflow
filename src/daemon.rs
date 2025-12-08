@@ -41,6 +41,9 @@ pub async fn run_foreground(config: Config) -> Result<()> {
   let interval_secs = config.timer.interval as u64 * 60;
   let mut timer = interval(Duration::from_secs(interval_secs));
 
+  // Consume the first tick (tokio interval fires immediately on first tick)
+  timer.tick().await;
+
   info!("✅ Daemon started, rotating every {}m", config.timer.interval);
 
   loop {
