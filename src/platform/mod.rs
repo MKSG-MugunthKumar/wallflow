@@ -108,7 +108,14 @@ fn detect_wayland_compositor() -> WaylandCompositor {
 pub fn check_platform_dependencies() -> PlatformStatus {
   match detect_platform() {
     Ok(Platform::MacOS) => {
-      if which::which("wallpaper").is_ok() {
+      // macOS has multiple backend options:
+      // 1. macos-wallpaper CLI (brew install wallpaper)
+      // 2. Swift compiler for native backend (comes with Xcode/CLT)
+      // 3. AppleScript (always available via osascript)
+      if which::which("wallpaper").is_ok()
+        || which::which("swiftc").is_ok()
+        || which::which("osascript").is_ok()
+      {
         PlatformStatus::Ready
       } else {
         PlatformStatus::MissingDependency(())

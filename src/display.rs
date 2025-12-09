@@ -46,25 +46,36 @@ impl Default for Resolution {
 pub fn get_primary_display_resolution() -> Result<Resolution> {
   // Try different detection methods based on available tools
 
-  // Method 1: Try xrandr (X11)
+  // Method 1: Try macOS system_profiler
+  #[cfg(target_os = "macos")]
+  if let Ok(resolution) = detect_resolution_macos() {
+    debug!("Detected resolution via macOS: {}x{}", resolution.width, resolution.height);
+    return Ok(resolution);
+  }
+
+  // Method 2: Try xrandr (X11)
+  #[cfg(target_os = "linux")]
   if let Ok(resolution) = detect_resolution_xrandr() {
     debug!("Detected resolution via xrandr: {}x{}", resolution.width, resolution.height);
     return Ok(resolution);
   }
 
-  // Method 2: Try swaymsg (Sway/wlroots)
+  // Method 3: Try swaymsg (Sway/wlroots)
+  #[cfg(target_os = "linux")]
   if let Ok(resolution) = detect_resolution_sway() {
     debug!("Detected resolution via sway: {}x{}", resolution.width, resolution.height);
     return Ok(resolution);
   }
 
-  // Method 3: Try wlr-randr (wlroots)
+  // Method 4: Try wlr-randr (wlroots)
+  #[cfg(target_os = "linux")]
   if let Ok(resolution) = detect_resolution_wlr_randr() {
     debug!("Detected resolution via wlr-randr: {}x{}", resolution.width, resolution.height);
     return Ok(resolution);
   }
 
-  // Method 4: Try KDE's kscreen-doctor
+  // Method 5: Try KDE's kscreen-doctor
+  #[cfg(target_os = "linux")]
   if let Ok(resolution) = detect_resolution_kscreen() {
     debug!("Detected resolution via kscreen-doctor: {}x{}", resolution.width, resolution.height);
     return Ok(resolution);
@@ -72,6 +83,67 @@ pub fn get_primary_display_resolution() -> Result<Resolution> {
 
   warn!("Could not detect display resolution, using default");
   Ok(Resolution::default())
+}
+
+/// Detect resolution on macOS using system_profiler
+#[cfg(target_os = "macos")]
+#[allow(dead_code)]
+fn detect_resolution_macos() -> Result<Resolution> {
+  // Use system_profiler to get display information
+  let output = Command::new("system_profiler")
+    .args(["SPDisplaysDataType", "-json"])
+    .output()
+    .context("Failed to execute system_profiler")?;
+
+  if !output.status.success() {
+    return Err(anyhow!("system_profiler command failed"));
+  }
+
+  let stdout = String::from_utf8(output.stdout).context("Invalid UTF-8 from system_profiler")?;
+
+  // Parse JSON to find resolution
+  // Look for "_spdisplays_resolution" or "Resolution" field
+  // Format is typically "2560 x 1440" or similar
+  for line in stdout.lines() {
+    if line.contains("_spdisplays_resolution") || line.contains("Resolution") {
+      // Extract resolution pattern like "2560 x 1440"
+      let re_pattern = regex::Regex::new(r"(\d{3,5})\s*x\s*(\d{3,5})").ok();
+      if let Some(re) = re_pattern {
+        if let Some(caps) = re.captures(line) {
+          let width: u32 = caps.get(1).and_then(|m| m.as_str().parse().ok()).unwrap_or(0);
+          let height: u32 = caps.get(2).and_then(|m| m.as_str().parse().ok()).unwrap_or(0);
+          if width > 0 && height > 0 {
+            return Ok(Resolution::new(width, height));
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback: try screenresolution tool if available
+  if let Ok(output) = Command::new("screenresolution").arg("get").output() {
+    if output.status.success() {
+      let stdout = String::from_utf8_lossy(&output.stdout);
+      // Parse output like "Display 0: 2560x1440x32@60Hz"
+      for line in stdout.lines() {
+        if let Some(res_start) = line.find(char::is_numeric) {
+          let res_part = &line[res_start..];
+          if let Some(x_pos) = res_part.find('x') {
+            let width_str = &res_part[..x_pos];
+            let rest = &res_part[x_pos + 1..];
+            if let Some(end_pos) = rest.find(|c: char| !c.is_ascii_digit()) {
+              let height_str = &rest[..end_pos];
+              if let (Ok(width), Ok(height)) = (width_str.parse::<u32>(), height_str.parse::<u32>()) {
+                return Ok(Resolution::new(width, height));
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Err(anyhow!("No resolution found via macOS methods"))
 }
 
 /// Detect resolution using xrandr (X11)
