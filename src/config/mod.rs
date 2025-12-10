@@ -143,6 +143,9 @@ pub struct PywalConfig {
   pub enabled: bool,
   #[serde(default)]
   pub backend: Option<String>,
+  /// Send SIGUSR1 to Kitty to reload colors after pywal generates color scheme
+  #[serde(default)]
+  pub notify_kitty: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]

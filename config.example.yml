@@ -6,15 +6,15 @@ paths:
 
 # Transition animations, used only when awww is used as a backend
 transition:
-  type: ["fade", "wipe", "outer", "random"]  # Single type or array
-  duration: 5  # Seconds
-  fps: 30  # Frame rate
+  type: ["fade", "wipe", "outer", "random"] # Single type or array
+  duration: 5 # Seconds
+  fps: 30 # Frame rate
 
 # Automated rotation settings
 timer:
-  interval: 30  # Minutes between changes
-  randomize: "5m"  # Add timing randomization
-  start_delay: "1m"  # Delay after boot
+  interval: 30 # Minutes between changes
+  randomize: "5m" # Add timing randomization
+  start_delay: "1m" # Delay after boot
 
 # Wallpaper sources
 # Available: local, wallhaven, picsum, apod, bing, reddit, earthview, unsplash
@@ -23,39 +23,39 @@ sources:
 
   # Local wallpaper collection
   local:
-    recursive: true  # Search subdirectories
+    recursive: true # Search subdirectories
     formats: ["jpg", "jpeg", "png", "webp"]
 
   # Wallhaven - curated wallpapers with search
   # CLI: wallflow wallhaven [search terms]
   wallhaven:
-    api_key: ""  # Optional, required for NSFW content
-    resolution: "2560x1440"  # Or leave empty for auto-detect
-    quality: "large"  # large, medium, small
-    purity: ["sfw"]  # sfw, sketchy, nsfw
-    categories: ["general"]  # general, anime, people (or search terms like "nature", "night")
+    api_key: "" # Optional, required for NSFW content
+    resolution: "2560x1440" # Or leave empty for auto-detect
+    quality: "large" # large, medium, small
+    purity: ["sfw"] # sfw, sketchy, nsfw
+    categories: ["general"] # general, anime, people (or search terms like "nature", "night")
 
   # Picsum - random placeholder photos
   # CLI: wallflow picsum
   picsum:
-    width: 2560  # Or leave empty for auto-detect
+    width: 2560 # Or leave empty for auto-detect
     height: 1440
 
   # NASA Astronomy Picture of the Day
   # CLI: wallflow apod
   apod:
     url: "https://api.nasa.gov/planetary/apod"
-    api_key: "DEMO_KEY"  # Replace with your NASA API key for higher rate limits
+    api_key: "DEMO_KEY" # Replace with your NASA API key for higher rate limits
 
   # Unsplash - high-resolution photos
   # CLI: wallflow unsplash [search topics]
   unsplash:
-    access_key: ""  # Required - get one at https://unsplash.com/developers
+    access_key: "" # Required - get one at https://unsplash.com/developers
 
   # Reddit - wallpapers from subreddits
   # CLI: wallflow reddit [subreddit]
   reddit:
-    subreddit: "wallpapers"  # Default subreddit (can also use "wallpapers+earthporn")
+    subreddit: "wallpapers" # Default subreddit (can also use "wallpapers+earthporn")
 
   # Note: bing and earthview require no configuration
   # CLI: wallflow bing      - Bing Photo of the Day
@@ -63,20 +63,21 @@ sources:
 
 # Cleanup management
 cleanup:
-  keep_count: 10  # Number of downloads to retain
+  keep_count: 10 # Number of downloads to retain
   auto_cleanup: true
 
 # Desktop integration
 integration:
   pywal:
     enabled: true
-    backend: "colorz"  # wal, haishoku, colorthief, colorz
+    backend: "wal" # wal, haishoku, colorthief, colorz
+    notify_kitty: true # Send SIGUSR1 to Kitty to reload colors
 
 # Logging
 logging:
   enabled: true
-  level: "info"  # debug, info, warn, error
-  file: "${HOME}/.local/share/wallflow/wallflow.log"  # Optional file output
+  level: "info" # debug, info, warn, error
+  file: "${HOME}/.local/share/wallflow/wallflow.log" # Optional file output
   timestamp: true
 
 # Advanced settings

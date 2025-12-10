@@ -72,6 +72,12 @@ enum Commands {
     /// Run in foreground (don't daemonize)
     #[arg(short, long)]
     foreground: bool,
+    /// Stop the running daemon
+    #[arg(short, long)]
+    stop: bool,
+    /// Reload daemon configuration (sends SIGHUP)
+    #[arg(short, long)]
+    reload: bool,
   },
   /// Show current configuration
   Config,
@@ -112,9 +118,22 @@ fn main() -> Result<()> {
   // Log system information and configuration details
   logging::log_system_info(&config);
 
+  // Handle daemon control commands (stop/reload) before runtime
+  if let Commands::Daemon { stop: true, .. } = cli.command {
+    return daemon::stop_daemon();
+  }
+  if let Commands::Daemon { reload: true, .. } = cli.command {
+    return daemon::reload_daemon();
+  }
+
   // Handle background daemon BEFORE creating tokio runtime
   // (daemonize fork + new runtime doesn't work from within an existing runtime)
-  if let Commands::Daemon { foreground: false } = cli.command {
+  if let Commands::Daemon {
+    foreground: false,
+    stop: false,
+    reload: false,
+  } = cli.command
+  {
     return daemon::run_background(config);
   }
 
@@ -150,8 +169,12 @@ async fn async_main(cli: Cli, config: Config) -> Result<()> {
     Commands::Unsplash { query } => {
       wallpaper::set_from_source(&config, "unsplash", &query).await?;
     }
-    Commands::Daemon { foreground } => {
-      // Background daemon is handled in main() before runtime creation
+    Commands::Daemon {
+      foreground,
+      stop: _,
+      reload: _,
+    } => {
+      // Background daemon, stop, and reload are handled in main() before runtime creation
       // Only foreground mode reaches here
       debug_assert!(foreground, "Background daemon should be handled before async runtime");
       daemon::run_foreground(config).await?;

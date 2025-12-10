@@ -24,12 +24,36 @@ pub async fn generate_pywal_colors(wallpaper_path: &Path, config: &Config) {
         if !stdout.is_empty() {
           debug!("stdout: {}", stdout);
         }
+
+        // Notify Kitty to reload colors if enabled
+        if config.integration.pywal.notify_kitty {
+          notify_kitty().await;
+        }
       } else {
         warn!("pywal failed: {}", stderr);
       }
     }
     Err(e) => {
       debug!("pywal not available: {}", e);
+    }
+  }
+}
+
+/// Send SIGUSR1 to all Kitty processes to trigger config reload
+async fn notify_kitty() {
+  let output = AsyncCommand::new("pkill").args(["-USR1", "kitty"]).output().await;
+
+  match output {
+    Ok(output) => {
+      if output.status.success() {
+        debug!("✅ Kitty notified to reload colors");
+      } else {
+        // pkill returns non-zero if no processes matched - that's fine
+        debug!("No Kitty processes found to notify");
+      }
+    }
+    Err(e) => {
+      debug!("Could not notify Kitty: {}", e);
     }
   }
 }

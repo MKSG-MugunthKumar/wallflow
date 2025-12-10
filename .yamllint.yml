@@ -15,7 +15,7 @@ rules:
     max-spaces-before: 0
     max-spaces-after: 1
   comments:
-    min-spaces-from-content: 2
+    min-spaces-from-content: 1
   document-start: disable  # Don't require --- at start
   document-end: disable    # Don't require ... at end
   empty-lines:

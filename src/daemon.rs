@@ -120,6 +120,53 @@ pub fn run_background(config: Config) -> Result<()> {
   }
 }
 
+/// Get the PID file path
+fn get_pid_file() -> Result<std::path::PathBuf> {
+  let home_dir = dirs::home_dir().context("Could not find home directory")?;
+  Ok(home_dir.join(".local/share/wallflow/wallflow.pid"))
+}
+
+/// Read the daemon PID from the PID file
+fn read_daemon_pid() -> Result<i32> {
+  let pid_file = get_pid_file()?;
+  let pid_str = std::fs::read_to_string(&pid_file).with_context(|| format!("Could not read PID file: {}", pid_file.display()))?;
+  let pid: i32 = pid_str.trim().parse().context("Invalid PID in file")?;
+  Ok(pid)
+}
+
+/// Stop the running daemon
+pub fn stop_daemon() -> Result<()> {
+  let pid = read_daemon_pid()?;
+
+  // Send SIGTERM to gracefully stop the daemon
+  let output = std::process::Command::new("kill").arg(pid.to_string()).output()?;
+
+  if output.status.success() {
+    println!("✅ Daemon stopped (PID: {})", pid);
+    // Clean up PID file
+    let pid_file = get_pid_file()?;
+    let _ = std::fs::remove_file(pid_file);
+    Ok(())
+  } else {
+    Err(anyhow::anyhow!("Failed to stop daemon (PID: {})", pid))
+  }
+}
+
+/// Reload the daemon configuration
+pub fn reload_daemon() -> Result<()> {
+  let pid = read_daemon_pid()?;
+
+  // Send SIGHUP to trigger config reload
+  let output = std::process::Command::new("kill").args(["-HUP", &pid.to_string()]).output()?;
+
+  if output.status.success() {
+    println!("✅ Daemon configuration reloaded (PID: {})", pid);
+    Ok(())
+  } else {
+    Err(anyhow::anyhow!("Failed to reload daemon (PID: {})", pid))
+  }
+}
+
 /// Set wallpaper based on configured default source
 async fn set_wallpaper_by_source(config: &Config) -> Result<()> {
   let source = config.sources.default.as_str();
