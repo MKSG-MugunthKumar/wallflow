@@ -47,6 +47,8 @@ async fn notify_kitty() {
     Ok(output) => {
       if output.status.success() {
         debug!("✅ Kitty notified to reload colors");
+        // Restore terminal state after signal (prevents prompt corruption)
+        let _ = AsyncCommand::new("stty").arg("sane").output().await;
       } else {
         // pkill returns non-zero if no processes matched - that's fine
         debug!("No Kitty processes found to notify");
