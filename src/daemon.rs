@@ -104,8 +104,9 @@ pub fn run_background(config: Config) -> Result<()> {
       // The parent's tokio runtime is gone, create a fresh one
       let rt = tokio::runtime::Runtime::new().context("Failed to create tokio runtime")?;
 
-      // Initialize logging for the daemon process
-      tracing_subscriber::fmt().with_env_filter("wallflow=info").with_target(false).init();
+      // Note: Logging is already initialized in main() before daemonization.
+      // After fork, stderr is redirected to wallflow_error.log, so tracing output goes there.
+      // Do NOT re-initialize tracing here - it would panic with "global subscriber already set".
 
       info!("✅ Daemon process started (PID: {})", std::process::id());
 
