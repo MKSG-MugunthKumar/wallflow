@@ -93,13 +93,12 @@ enum Commands {
   },
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
   let cli = Cli::parse();
 
   // Load configuration first (needed for logging setup)
-  let mut config = if let Some(config_path) = cli.config {
-    Config::load(&config_path)?
+  let mut config = if let Some(config_path) = &cli.config {
+    Config::load(config_path)?
   } else {
     Config::load_or_default()?
   };
@@ -113,6 +112,18 @@ async fn main() -> Result<()> {
   // Log system information and configuration details
   logging::log_system_info(&config);
 
+  // Handle background daemon BEFORE creating tokio runtime
+  // (daemonize fork + new runtime doesn't work from within an existing runtime)
+  if let Commands::Daemon { foreground: false } = cli.command {
+    return daemon::run_background(config);
+  }
+
+  // Create tokio runtime for all other commands
+  let rt = tokio::runtime::Runtime::new()?;
+  rt.block_on(async_main(cli, config))
+}
+
+async fn async_main(cli: Cli, config: Config) -> Result<()> {
   // Execute command
   match cli.command {
     Commands::Local => {
@@ -140,12 +151,10 @@ async fn main() -> Result<()> {
       wallpaper::set_from_source(&config, "unsplash", &query).await?;
     }
     Commands::Daemon { foreground } => {
-      if foreground {
-        daemon::run_foreground(config).await?;
-      } else {
-        // run_background is sync - it daemonizes then creates its own tokio runtime
-        daemon::run_background(config)?;
-      }
+      // Background daemon is handled in main() before runtime creation
+      // Only foreground mode reaches here
+      debug_assert!(foreground, "Background daemon should be handled before async runtime");
+      daemon::run_foreground(config).await?;
     }
     Commands::Config => {
       show_config(&config)?;
