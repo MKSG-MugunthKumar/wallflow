@@ -102,6 +102,9 @@ shellexpand = "3.1"
 # Command existence checking
 which = "4.4"
 
+# Regex for parsing (used in macOS resolution detection)
+regex = "1.10"
+
 # Date/time handling for file naming
 chrono = { version = "0.4", features = [
   "serde",

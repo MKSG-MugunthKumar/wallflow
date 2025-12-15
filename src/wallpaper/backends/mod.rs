@@ -18,4 +18,5 @@ pub mod awww;
 pub use registry::BackendRegistry;
 pub use traits::WallpaperBackend;
 
+#[cfg(target_os = "linux")]
 pub use awww::AwwwBackend;
