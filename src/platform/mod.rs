@@ -14,6 +14,7 @@ pub enum Platform {
 
 /// Linux display server types
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum LinuxDisplayServer {
   X11,
   Wayland(WaylandCompositor),
@@ -21,6 +22,7 @@ pub enum LinuxDisplayServer {
 
 /// Wayland compositor detection
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum WaylandCompositor {
   Sway,
   Hyprland,
@@ -114,10 +116,7 @@ pub fn check_platform_dependencies() -> PlatformStatus {
       // 1. macos-wallpaper CLI (brew install wallpaper)
       // 2. Swift compiler for native backend (comes with Xcode/CLT)
       // 3. AppleScript (always available via osascript)
-      if which::which("wallpaper").is_ok()
-        || which::which("swiftc").is_ok()
-        || which::which("osascript").is_ok()
-      {
+      if which::which("wallpaper").is_ok() || which::which("swiftc").is_ok() || which::which("osascript").is_ok() {
         PlatformStatus::Ready
       } else {
         PlatformStatus::MissingDependency(())
