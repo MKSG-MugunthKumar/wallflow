@@ -15,11 +15,12 @@ NC='\033[0m' # No Color
 if ! command -v pre-commit &> /dev/null; then
     echo -e "${YELLOW}📦 Installing pre-commit...${NC}"
 
-    # Try pip first, then package manager
-    if command -v pip3 &> /dev/null; then
-        pip3 install --user pre-commit
-    elif command -v pip &> /dev/null; then
-        pip install --user pre-commit
+    # Try pipx first (recommended), then package manager
+    if command -v pipx &> /dev/null; then
+        pipx install pre-commit
+    elif command -v brew &> /dev/null; then
+        echo "Installing via brew..."
+        brew install pre-commit
     elif command -v dnf &> /dev/null; then
         echo "Installing via dnf..."
         sudo dnf install -y pre-commit
@@ -28,7 +29,7 @@ if ! command -v pre-commit &> /dev/null; then
         sudo apt update && sudo apt install -y pre-commit
     else
         echo -e "${YELLOW}⚠️  Please install pre-commit manually:${NC}"
-        echo "pip install pre-commit"
+        echo "pipx install pre-commit"
         echo "OR visit: https://pre-commit.com/#installation"
         exit 1
     fi
@@ -45,7 +46,13 @@ fi
 
 # Install yamllint
 if ! command -v yamllint &> /dev/null; then
-    pip3 install --user yamllint || pip install --user yamllint
+    if command -v pipx &> /dev/null; then
+        pipx install yamllint
+    elif command -v brew &> /dev/null; then
+        brew install yamllint
+    else
+        echo -e "${YELLOW}⚠️ Please install yamllint manually: pipx install yamllint${NC}"
+    fi
 fi
 
 # Install markdownlint-cli (requires Node.js)
@@ -61,7 +68,9 @@ fi
 
 # Install shellcheck
 if ! command -v shellcheck &> /dev/null; then
-    if command -v dnf &> /dev/null; then
+    if command -v brew &> /dev/null; then
+        brew install shellcheck
+    elif command -v dnf &> /dev/null; then
         sudo dnf install -y shellcheck || echo "⚠️ shellcheck installation failed"
     elif command -v apt &> /dev/null; then
         sudo apt install -y shellcheck || echo "⚠️ shellcheck installation failed"
