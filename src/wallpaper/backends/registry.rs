@@ -1,4 +1,6 @@
+#[cfg(target_os = "linux")]
 use super::awww;
+
 /// Registry for managing wallpaper backends
 use crate::platform::{Platform, detect_platform};
 use crate::wallpaper::backends::WallpaperBackend;
@@ -80,6 +82,7 @@ impl BackendRegistry {
     #[cfg(target_os = "windows")]
     self.register_windows_backends();
 
+    #[cfg(target_os = "linux")]
     self.register_awww_backend();
   }
 
@@ -143,6 +146,7 @@ impl BackendRegistry {
   }
 
   /// Register awww backend if available
+  #[cfg(target_os = "linux")]
   fn register_awww_backend(&mut self) {
     self.register_backend(Arc::new(awww::AwwwBackend::new()));
   }

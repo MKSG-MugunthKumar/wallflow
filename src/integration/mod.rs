@@ -17,6 +17,7 @@ pub use kde::set_kde_wallpaper;
 pub use wal::generate_pywal_colors;
 
 #[cfg(target_os = "macos")]
+#[allow(unused_imports)]
 pub use macos::{
     set_accent_color, set_appearance_mode, toggle_appearance_mode,
     apply_theme_from_wallpaper, get_appearance_mode,

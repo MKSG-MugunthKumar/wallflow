@@ -1,4 +1,6 @@
 use anyhow::Result;
+
+#[cfg(target_os = "linux")]
 use std::env;
 
 /// Supported platforms for wallpaper management
