@@ -20,11 +20,10 @@ jobs:
             os: ubuntu-latest
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
-          # macOS builds temporarily disabled until backend implementation is complete
-          # - target: x86_64-apple-darwin
-          #   os: macos-latest
-          # - target: aarch64-apple-darwin
-          #   os: macos-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -105,9 +104,8 @@ jobs:
           echo "Download the appropriate binary for your platform:" >> CHANGELOG.md
           echo "- **Linux x86_64**: \`wallflow-x86_64-unknown-linux-gnu\`" >> CHANGELOG.md
           echo "- **Linux ARM64**: \`wallflow-aarch64-unknown-linux-gnu\`" >> CHANGELOG.md
-          # macOS binaries temporarily unavailable
-          # echo "- **macOS Intel**: \`wallflow-x86_64-apple-darwin\`" >> CHANGELOG.md
-          # echo "- **macOS Apple Silicon**: \`wallflow-aarch64-apple-darwin\`" >> CHANGELOG.md
+          echo "- **macOS Intel**: \`wallflow-x86_64-apple-darwin\`" >> CHANGELOG.md
+          echo "- **macOS Apple Silicon**: \`wallflow-aarch64-apple-darwin\`" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
           echo "Then make it executable and move to your PATH:" >> CHANGELOG.md
           echo "\`\`\`bash" >> CHANGELOG.md
@@ -127,9 +125,8 @@ jobs:
           files: |
             artifacts/wallflow-x86_64-unknown-linux-gnu/wallflow-x86_64-unknown-linux-gnu
             artifacts/wallflow-aarch64-unknown-linux-gnu/wallflow-aarch64-unknown-linux-gnu
-            # macOS binaries temporarily disabled
-            # artifacts/wallflow-x86_64-apple-darwin/wallflow-x86_64-apple-darwin
-            # artifacts/wallflow-aarch64-apple-darwin/wallflow-aarch64-apple-darwin
+            artifacts/wallflow-x86_64-apple-darwin/wallflow-x86_64-apple-darwin
+            artifacts/wallflow-aarch64-apple-darwin/wallflow-aarch64-apple-darwin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
