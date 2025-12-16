@@ -9,9 +9,6 @@
 //! and GTK/Qt applications based on wallpaper colors, macOS theming is
 //! limited to system-level settings with a fixed accent color palette.
 
-// These are planned features - suppress dead_code warnings
-#![allow(dead_code)]
-
 use std::path::Path;
 use tokio::process::Command as AsyncCommand;
 use tracing::{debug, info, warn};
@@ -20,6 +17,7 @@ use tracing::{debug, info, warn};
 /// These correspond to the colors available in System Settings > Appearance
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i8)]
+#[allow(dead_code)]
 pub enum AccentColor {
   Multicolor = -1, // Graphite-ish, follows app
   Red = 0,
@@ -31,6 +29,7 @@ pub enum AccentColor {
   Pink = 6,
 }
 
+#[allow(dead_code)]
 impl AccentColor {
   /// Parse accent color from string (case-insensitive)
   pub fn from_str(s: &str) -> Option<Self> {
@@ -104,12 +103,14 @@ impl AccentColor {
 
 /// macOS appearance mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum AppearanceMode {
   Light,
   Dark,
   Auto, // Follow system/time-based
 }
 
+#[allow(dead_code)]
 impl AppearanceMode {
   pub fn from_str(s: &str) -> Option<Self> {
     match s.to_lowercase().as_str() {
@@ -123,6 +124,7 @@ impl AppearanceMode {
 
 /// Check if we're running on macOS
 #[cfg(target_os = "macos")]
+#[allow(dead_code)]
 fn is_macos() -> bool {
   true
 }
@@ -135,6 +137,7 @@ fn is_macos() -> bool {
 /// Set macOS dark/light mode using AppleScript
 ///
 /// This changes the system-wide appearance mode.
+#[allow(dead_code)]
 pub async fn set_appearance_mode(mode: AppearanceMode) {
   if !is_macos() {
     debug!("Not on macOS, skipping appearance mode change");
@@ -173,6 +176,7 @@ pub async fn set_appearance_mode(mode: AppearanceMode) {
 ///
 /// This changes the system-wide accent color. Requires sending specific
 /// notifications for running apps to update their appearance.
+#[allow(dead_code)]
 pub async fn set_accent_color(color: AccentColor) {
   if !is_macos() {
     debug!("Not on macOS, skipping accent color change");
@@ -253,6 +257,7 @@ Thread.sleep(forTimeInterval: 0.1)
 
 /// Fallback method using defaults command
 /// Note: This won't update running apps until they're restarted
+#[allow(dead_code)]
 async fn set_accent_color_fallback(color: AccentColor) {
   let color_value = color as i8;
 
@@ -288,6 +293,7 @@ async fn set_accent_color_fallback(color: AccentColor) {
 ///
 /// Unlike accent color, this can be any RGB value.
 /// Format: "R G B" where values are 0.0-1.0
+#[allow(dead_code)]
 pub async fn set_highlight_color(r: f32, g: f32, b: f32) {
   if !is_macos() {
     debug!("Not on macOS, skipping highlight color change");
@@ -317,6 +323,7 @@ pub async fn set_highlight_color(r: f32, g: f32, b: f32) {
 }
 
 /// Get current macOS appearance mode
+#[allow(dead_code)]
 pub async fn get_appearance_mode() -> Option<AppearanceMode> {
   if !is_macos() {
     return None;
@@ -340,6 +347,7 @@ pub async fn get_appearance_mode() -> Option<AppearanceMode> {
 }
 
 /// Toggle between dark and light mode
+#[allow(dead_code)]
 pub async fn toggle_appearance_mode() {
   let current = get_appearance_mode().await;
 
@@ -358,6 +366,8 @@ pub async fn toggle_appearance_mode() {
 /// 2. Optionally sets accent color based on dominant color
 ///
 /// Note: This is much simpler than pywal since macOS has limited theming options.
+#[allow(dead_code)]
+#[allow(clippy::collapsible_if)]
 pub async fn apply_theme_from_wallpaper(
   _wallpaper_path: &Path,
   set_dark_mode: bool,
@@ -371,15 +381,19 @@ pub async fn apply_theme_from_wallpaper(
   }
 
   // Set appearance mode based on image brightness
-  if set_dark_mode && let Some(is_dark) = is_dark_image {
-    let mode = if is_dark { AppearanceMode::Dark } else { AppearanceMode::Light };
-    set_appearance_mode(mode).await;
+  if set_dark_mode {
+    if let Some(is_dark) = is_dark_image {
+      let mode = if is_dark { AppearanceMode::Dark } else { AppearanceMode::Light };
+      set_appearance_mode(mode).await;
+    }
   }
 
   // Set accent color based on dominant color
-  if set_accent && let Some((r, g, b)) = dominant_color {
-    let accent = AccentColor::from_dominant_color(r, g, b);
-    set_accent_color(accent).await;
+  if set_accent {
+    if let Some((r, g, b)) = dominant_color {
+      let accent = AccentColor::from_dominant_color(r, g, b);
+      set_accent_color(accent).await;
+    }
   }
 }
 

@@ -120,18 +120,14 @@ impl BackendRegistry {
 
   /// Register macOS-specific backends
   /// Priority order:
-  /// 1. desktoppr CLI (brew install desktoppr) - sets wallpaper on ALL Spaces
-  /// 2. macos-wallpaper CLI (brew install wallpaper) - good UX, single space
-  /// 3. Swift native backend using NSWorkspace API - requires swiftc
-  /// 4. AppleScript fallback - always available but may trigger Gatekeeper
+  /// 1. macos-wallpaper CLI (brew install wallpaper) - best UX
+  /// 2. Swift native backend using NSWorkspace API - requires swiftc
+  /// 3. AppleScript fallback - always available but may trigger Gatekeeper
   #[cfg(target_os = "macos")]
   fn register_macos_backends(&mut self) {
     use super::macos::*;
 
-    // Highest priority: desktoppr - sets wallpaper on ALL Spaces
-    self.register_backend(Arc::new(DesktopprBackend::new()));
-
-    // High priority: macos-wallpaper CLI tool
+    // Highest priority: macos-wallpaper CLI tool
     self.register_backend(Arc::new(MacOSWallpaperBackend::new()));
 
     // Medium priority: Swift native backend (compiles helper on-the-fly)

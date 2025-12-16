@@ -104,11 +104,11 @@ fn detect_resolution_macos() -> Result<Resolution> {
   // Parse JSON to find resolution
   // Look for "_spdisplays_resolution" or "Resolution" field
   // Format is typically "2560 x 1440" or similar
-  let re = regex::Regex::new(r"(\d{3,5})\s*x\s*(\d{3,5})").ok();
+  let re_pattern = regex::Regex::new(r"(\d{3,5})\s*x\s*(\d{3,5})").ok();
   for line in stdout.lines() {
     if line.contains("_spdisplays_resolution") || line.contains("Resolution") {
       // Extract resolution pattern like "2560 x 1440"
-      if let Some(ref re) = re
+      if let Some(ref re) = re_pattern
         && let Some(caps) = re.captures(line)
       {
         let width: u32 = caps.get(1).and_then(|m| m.as_str().parse().ok()).unwrap_or(0);
@@ -121,10 +121,9 @@ fn detect_resolution_macos() -> Result<Resolution> {
   }
 
   // Fallback: try screenresolution tool if available
-  if let Ok(output) = Command::new("screenresolution").arg("get").output() {
-    if !output.status.success() {
-      return Err(anyhow!("No resolution found via macOS methods"));
-    }
+  if let Ok(output) = Command::new("screenresolution").arg("get").output()
+    && output.status.success()
+  {
     let stdout = String::from_utf8_lossy(&output.stdout);
     // Parse output like "Display 0: 2560x1440x32@60Hz"
     for line in stdout.lines() {

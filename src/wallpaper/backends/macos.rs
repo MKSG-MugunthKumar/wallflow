@@ -101,73 +101,6 @@ impl WallpaperBackend for MacOSWallpaperBackend {
   }
 }
 
-/// Backend using desktoppr CLI tool
-/// This tool properly sets wallpaper on ALL Spaces (virtual desktops)
-/// Install via: brew install desktoppr
-#[cfg(target_os = "macos")]
-pub struct DesktopprBackend;
-
-#[cfg(target_os = "macos")]
-impl DesktopprBackend {
-  pub fn new() -> Self {
-    Self
-  }
-}
-
-#[cfg(target_os = "macos")]
-#[async_trait]
-impl WallpaperBackend for DesktopprBackend {
-  async fn set_wallpaper(&self, image_path: &Path, _options: &WallpaperOptions) -> Result<()> {
-    // desktoppr sets wallpaper on ALL Spaces by default
-    let output = AsyncCommand::new("desktoppr")
-      .arg(image_path)
-      .output()
-      .await
-      .context("Failed to execute desktoppr command")?;
-
-    if output.status.success() {
-      debug!("✅ desktoppr set wallpaper on all Spaces successfully");
-      Ok(())
-    } else {
-      let stderr = String::from_utf8_lossy(&output.stderr);
-      Err(anyhow::anyhow!("desktoppr command failed: {}", stderr))
-    }
-  }
-
-  async fn get_current_wallpaper(&self) -> Result<Option<PathBuf>> {
-    let output = AsyncCommand::new("desktoppr")
-      .output()
-      .await
-      .context("Failed to get current wallpaper via desktoppr")?;
-
-    if output.status.success() {
-      let path_str = String::from_utf8_lossy(&output.stdout);
-      let path_str = path_str.trim();
-      if !path_str.is_empty() && !path_str.contains("not set") {
-        return Ok(Some(PathBuf::from(path_str)));
-      }
-    }
-
-    Ok(None)
-  }
-
-  fn is_available(&self) -> bool {
-    which::which("desktoppr").is_ok()
-  }
-
-  fn priority(&self) -> u32 {
-    110 // Highest priority - best for all Spaces support
-  }
-
-  fn name(&self) -> &'static str {
-    "desktoppr"
-  }
-
-  fn supported_transitions(&self) -> Vec<String> {
-    vec![] // No transition support
-  }
-}
-
 /// Backend using a bundled Swift helper that calls NSWorkspace.setDesktopImageURL
 /// This is the native macOS API and doesn't require external dependencies
 #[cfg(target_os = "macos")]
@@ -231,9 +164,75 @@ impl SwiftNativeBackend {
     Ok(binary_path)
   }
 
-  /// Swift helper source code, embedded at compile time from src/swift/wallflow_helper.swift
   fn helper_source_code() -> &'static str {
-    include_str!("../../swift/wallflow_helper.swift")
+    r#"
+import Cocoa
+
+// Usage: wallflow_helper <image_path> [scaling] [screen]
+// scaling: fill (default), fit, stretch, center
+// screen: all (default), main, <index>
+
+func main() {
+    let args = CommandLine.arguments
+    guard args.count >= 2 else {
+        fputs("Usage: wallflow_helper <image_path> [scaling] [screen]\n", stderr)
+        exit(1)
+    }
+
+    let imagePath = args[1]
+    let scaling = args.count > 2 ? args[2] : "fill"
+    let screen = args.count > 3 ? args[3] : "all"
+
+    let url = URL(fileURLWithPath: imagePath)
+
+    // Determine scaling option
+    var options: [NSWorkspace.DesktopImageOptionKey: Any] = [:]
+    switch scaling {
+    case "fill":
+        options[.imageScaling] = NSImageScaling.scaleProportionallyUpOrDown.rawValue
+        options[.allowClipping] = true
+    case "fit":
+        options[.imageScaling] = NSImageScaling.scaleProportionallyUpOrDown.rawValue
+        options[.allowClipping] = false
+    case "stretch":
+        options[.imageScaling] = NSImageScaling.scaleAxesIndependently.rawValue
+    case "center":
+        options[.imageScaling] = NSImageScaling.scaleNone.rawValue
+    default:
+        options[.imageScaling] = NSImageScaling.scaleProportionallyUpOrDown.rawValue
+        options[.allowClipping] = true
+    }
+
+    // Determine which screens to set
+    let screens: [NSScreen]
+    switch screen {
+    case "all":
+        screens = NSScreen.screens
+    case "main":
+        screens = NSScreen.main.map { [$0] } ?? []
+    default:
+        if let index = Int(screen), index < NSScreen.screens.count {
+            screens = [NSScreen.screens[index]]
+        } else {
+            screens = NSScreen.screens
+        }
+    }
+
+    // Set wallpaper for each screen
+    for screen in screens {
+        do {
+            try NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: options)
+        } catch {
+            fputs("Error setting wallpaper for screen: \(error)\n", stderr)
+            exit(1)
+        }
+    }
+
+    print("Wallpaper set successfully")
+}
+
+main()
+"#
   }
 }
 
