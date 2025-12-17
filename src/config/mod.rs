@@ -228,6 +228,7 @@ impl Config {
   pub fn default_path() -> PathBuf {
     dirs::config_dir()
       .unwrap_or_else(|| dirs::home_dir().unwrap().join(".config"))
+      .join("mksg")
       .join("wallflow")
       .join("config.yml")
   }

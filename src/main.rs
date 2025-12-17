@@ -19,7 +19,7 @@ use config::Config;
 /// Elegant wallpaper management with smooth transitions 🌊
 #[derive(Parser)]
 #[command(name = "wallflow")]
-#[command(version = "0.1.0")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "Elegant wallpaper management with smooth transitions")]
 #[command(
   long_about = "wallflow brings fluidity to your desktop with beautiful wallpaper transitions, dynamic color schemes, and seamless desktop integration."
@@ -32,7 +32,7 @@ struct Cli {
   #[arg(short, long)]
   verbose: bool,
 
-  /// Config file path (default: ~/.config/wallflow/config.yml)
+  /// Config file path (default: ~/.config/mksg/wallflow/config.yml)
   #[arg(short, long)]
   config: Option<std::path::PathBuf>,
 }
