@@ -3,6 +3,7 @@
 //! Downloads satellite imagery wallpapers from Google Earth View.
 //! Uses a two-step API: first fetch the list, then fetch individual image details.
 
+use super::DownloadOptions;
 use super::client::WallflowClient as Client;
 use super::filesystem::FilesystemHelper;
 use super::traits::{Wallpaper, WallpaperDownloader};
@@ -56,7 +57,7 @@ pub struct EarthViewDownloader;
 impl WallpaperDownloader for EarthViewDownloader {
   /// Download a wallpaper from Google Earth View
   /// Note: Earth View ignores query parameters as it returns curated satellite imagery
-  async fn download(&self, config: &Config, _query: &[String]) -> Result<Wallpaper> {
+  async fn download(&self, config: &Config, _query: &[String], opts: &DownloadOptions) -> Result<Wallpaper> {
     debug!("Fetching Earth View photo list");
 
     let client = Client::from(&config.advanced);
@@ -128,7 +129,8 @@ impl WallpaperDownloader for EarthViewDownloader {
       location.replace(", ", "_").replace(' ', "-"),
       FilesystemHelper::make_file_suffix()
     );
-    let file_path = Path::new(&config.paths.downloads).join(&filename);
+    let download_dir = opts.output_dir.as_deref().unwrap_or(Path::new(&config.paths.downloads));
+    let file_path = download_dir.join(&filename);
 
     // Ensure download directory exists
     if let Some(parent) = file_path.parent() {

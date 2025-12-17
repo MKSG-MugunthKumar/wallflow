@@ -97,11 +97,18 @@ pub fn platform_info() -> Result<String> {
 
 /// Download and set wallpaper from any registered source
 /// The `query` parameter contains additional arguments (e.g., search terms, subreddit names)
-pub async fn set_from_source(config: &Config, source: &str, query: &[String]) -> Result<()> {
+pub async fn set_from_source(config: &Config, source: &str, query: &[String], opts: &crate::downloaders::DownloadOptions) -> Result<()> {
   info!("Downloading wallpaper from {}", source);
-  let wallpaper = crate::downloaders::download_from_source(source, config, query).await?;
+  let wallpaper = crate::downloaders::download_from_source(source, config, query, opts).await?;
   debug!("Downloaded: {:?}", wallpaper);
-  apply_wallpaper(&wallpaper.file_path, config).await?;
+
+  if opts.no_set {
+    // Just print the path for the caller to use
+    println!("{}", wallpaper.file_path.display());
+  } else {
+    apply_wallpaper(&wallpaper.file_path, config).await?;
+  }
+
   Ok(())
 }
 

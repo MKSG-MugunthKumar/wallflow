@@ -35,6 +35,14 @@ struct Cli {
   /// Config file path (default: ~/.config/mksg/wallflow/config.yml)
   #[arg(short, long)]
   config: Option<std::path::PathBuf>,
+
+  /// Output directory for downloaded wallpapers (overrides config)
+  #[arg(short, long)]
+  output: Option<std::path::PathBuf>,
+
+  /// Download only, don't set as wallpaper
+  #[arg(long)]
+  no_set: bool,
 }
 
 #[derive(Subcommand)]
@@ -143,31 +151,37 @@ fn main() -> Result<()> {
 }
 
 async fn async_main(cli: Cli, config: Config) -> Result<()> {
+  // Build download options from CLI flags
+  let download_opts = downloaders::DownloadOptions {
+    output_dir: cli.output.clone(),
+    no_set: cli.no_set,
+  };
+
   // Execute command
   match cli.command {
     Commands::Local => {
       wallpaper::set_local(&config).await?;
     }
     Commands::Wallhaven { query } => {
-      wallpaper::set_from_source(&config, "wallhaven", &query).await?;
+      wallpaper::set_from_source(&config, "wallhaven", &query, &download_opts).await?;
     }
     Commands::Picsum => {
-      wallpaper::set_from_source(&config, "picsum", &[]).await?;
+      wallpaper::set_from_source(&config, "picsum", &[], &download_opts).await?;
     }
     Commands::Apod => {
-      wallpaper::set_from_source(&config, "apod", &[]).await?;
+      wallpaper::set_from_source(&config, "apod", &[], &download_opts).await?;
     }
     Commands::Bing => {
-      wallpaper::set_from_source(&config, "bing", &[]).await?;
+      wallpaper::set_from_source(&config, "bing", &[], &download_opts).await?;
     }
     Commands::Reddit { query } => {
-      wallpaper::set_from_source(&config, "reddit", &query).await?;
+      wallpaper::set_from_source(&config, "reddit", &query, &download_opts).await?;
     }
     Commands::Earthview => {
-      wallpaper::set_from_source(&config, "earthview", &[]).await?;
+      wallpaper::set_from_source(&config, "earthview", &[], &download_opts).await?;
     }
     Commands::Unsplash { query } => {
-      wallpaper::set_from_source(&config, "unsplash", &query).await?;
+      wallpaper::set_from_source(&config, "unsplash", &query, &download_opts).await?;
     }
     Commands::Daemon {
       foreground,

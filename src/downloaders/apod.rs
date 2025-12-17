@@ -6,6 +6,7 @@
 //! - File download and saving
 //! - Metadata extraction and preservation
 
+use super::DownloadOptions;
 use super::traits::WallpaperDownloader;
 use crate::config::Config;
 use crate::downloaders::client::WallflowClient as Client;
@@ -57,7 +58,7 @@ pub struct ApodDownloader;
 impl WallpaperDownloader for ApodDownloader {
   /// Fetch APOD data from NASA API
   /// Note: APOD ignores query parameters as it always returns the picture of the day
-  async fn download(&self, config: &Config, _query: &[String]) -> Result<Wallpaper> {
+  async fn download(&self, config: &Config, _query: &[String], opts: &DownloadOptions) -> Result<Wallpaper> {
     debug!("Fetching APOD data from NASA API");
     let client = Client::from(&config.advanced);
     let url = config.sources.apod.url.clone();
@@ -107,7 +108,8 @@ impl WallpaperDownloader for ApodDownloader {
         if ext.len() <= 5 { Some(ext) } else { None }
       })
       .unwrap_or("jpg");
-    let file_path = Path::new(&config.paths.downloads).join(&filename).with_extension(file_extension);
+    let download_dir = opts.output_dir.as_deref().unwrap_or(Path::new(&config.paths.downloads));
+    let file_path = download_dir.join(&filename).with_extension(file_extension);
 
     // Ensure the parent directory exists
     if let Some(parent) = file_path.parent() {

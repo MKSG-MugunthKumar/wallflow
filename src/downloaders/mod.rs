@@ -14,14 +14,24 @@ pub mod wallhaven;
 
 use crate::config::Config;
 use anyhow::Result;
+use std::path::PathBuf;
+
+/// Options for downloading wallpapers
+#[derive(Debug, Clone, Default)]
+pub struct DownloadOptions {
+  /// Custom output directory (overrides config)
+  pub output_dir: Option<PathBuf>,
+  /// Don't set as wallpaper after download
+  pub no_set: bool,
+}
 
 /// Download wallpaper from specified source by name
 /// The `query` parameter contains additional CLI arguments (e.g., search terms, subreddit names)
-pub async fn download_from_source(source: &str, config: &Config, query: &[String]) -> Result<traits::Wallpaper> {
+pub async fn download_from_source(source: &str, config: &Config, query: &[String], opts: &DownloadOptions) -> Result<traits::Wallpaper> {
   let registry = registry::DownloaderRegistry::new();
   let downloader = registry.get_downloader(source)?;
 
-  downloader.download(config, query).await
+  downloader.download(config, query, opts).await
 }
 
 /// List all available downloader sources

@@ -6,6 +6,7 @@ use tokio::time::{Duration, interval, sleep};
 use tracing::{debug, error, info, warn};
 
 use crate::config::Config;
+use crate::downloaders::DownloadOptions;
 use crate::wallpaper;
 
 /// Run daemon in foreground with automatic wallpaper rotation
@@ -170,11 +171,13 @@ pub fn reload_daemon() -> Result<()> {
 /// Set wallpaper based on configured default source
 async fn set_wallpaper_by_source(config: &Config) -> Result<()> {
   let source = config.sources.default.as_str();
+  // Daemon always sets wallpaper (no --no-set)
+  let opts = DownloadOptions::default();
   match source {
     "local" => wallpaper::set_local(config).await,
     // All remote sources use the generic set_from_source with empty query
     // (daemon uses config defaults, not CLI args)
-    "wallhaven" | "picsum" | "apod" | "bing" | "reddit" | "earthview" | "unsplash" => wallpaper::set_from_source(config, source, &[]).await,
+    "wallhaven" | "picsum" | "apod" | "bing" | "reddit" | "earthview" | "unsplash" => wallpaper::set_from_source(config, source, &[], &opts).await,
     other => {
       warn!("Unknown source '{}', falling back to local", other);
       wallpaper::set_local(config).await

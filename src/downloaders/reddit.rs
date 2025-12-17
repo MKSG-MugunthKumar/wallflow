@@ -3,6 +3,7 @@
 //! Downloads wallpapers from Reddit subreddits like r/wallpapers, r/earthporn, etc.
 //! Uses Reddit's JSON API (append .json to any subreddit URL).
 
+use super::DownloadOptions;
 use super::client::WallflowClient as Client;
 use super::filesystem::FilesystemHelper;
 use super::traits::{Wallpaper, WallpaperDownloader};
@@ -76,7 +77,7 @@ impl RedditDownloader {
 impl WallpaperDownloader for RedditDownloader {
   /// Download a wallpaper from Reddit
   /// Query parameters specify subreddit(s) (e.g., "wallflow reddit earthporn" or "wallflow reddit wallpapers+earthporn")
-  async fn download(&self, config: &Config, query: &[String]) -> Result<Wallpaper> {
+  async fn download(&self, config: &Config, query: &[String], opts: &DownloadOptions) -> Result<Wallpaper> {
     // Use first query param as subreddit, or default
     let subreddit = query.first().map(|s| s.as_str()).unwrap_or(DEFAULT_SUBREDDIT);
 
@@ -143,7 +144,8 @@ impl WallpaperDownloader for RedditDownloader {
       .unwrap_or("jpg");
 
     let filename = format!("{}_{}", self.source_name(), FilesystemHelper::make_file_suffix());
-    let file_path = Path::new(&config.paths.downloads).join(&filename).with_extension(file_extension);
+    let download_dir = opts.output_dir.as_deref().unwrap_or(Path::new(&config.paths.downloads));
+    let file_path = download_dir.join(&filename).with_extension(file_extension);
 
     // Ensure download directory exists
     if let Some(parent) = file_path.parent() {

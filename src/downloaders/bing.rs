@@ -3,6 +3,7 @@
 //! Downloads the daily wallpaper from Bing's image archive.
 //! Simple JSON API that returns up to 8 recent images.
 
+use super::DownloadOptions;
 use super::client::WallflowClient as Client;
 use super::filesystem::FilesystemHelper;
 use super::traits::{Wallpaper, WallpaperDownloader};
@@ -43,7 +44,7 @@ pub struct BingDownloader;
 impl WallpaperDownloader for BingDownloader {
   /// Download Bing Photo of the Day
   /// Note: Bing ignores query parameters as it returns daily curated images
-  async fn download(&self, config: &Config, _query: &[String]) -> Result<Wallpaper> {
+  async fn download(&self, config: &Config, _query: &[String], opts: &DownloadOptions) -> Result<Wallpaper> {
     debug!("Fetching Bing Photo of the Day");
 
     let client = Client::from(&config.advanced);
@@ -90,7 +91,8 @@ impl WallpaperDownloader for BingDownloader {
     let bytes = image_response.bytes().await.context("Failed to read Bing image data")?;
 
     let filename = format!("{}_{}", self.source_name(), FilesystemHelper::make_file_suffix());
-    let file_path = Path::new(&config.paths.downloads).join(&filename).with_extension("jpg");
+    let download_dir = opts.output_dir.as_deref().unwrap_or(Path::new(&config.paths.downloads));
+    let file_path = download_dir.join(&filename).with_extension("jpg");
 
     // Ensure download directory exists
     if let Some(parent) = file_path.parent() {

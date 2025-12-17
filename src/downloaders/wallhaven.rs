@@ -3,6 +3,7 @@
 //! Downloads wallpapers from https://wallhaven.cc using their public API.
 //! Supports filtering by resolution, purity, categories, and search terms.
 
+use super::DownloadOptions;
 use super::client::WallflowClient as Client;
 use super::filesystem::FilesystemHelper;
 use super::traits::{Wallpaper, WallpaperDownloader};
@@ -90,7 +91,7 @@ impl WallhavenDownloader {
 impl WallpaperDownloader for WallhavenDownloader {
   /// Download a wallpaper from Wallhaven
   /// Query parameters are used as search terms (e.g., "wallflow wallhaven nature mountains")
-  async fn download(&self, config: &Config, query: &[String]) -> Result<Wallpaper> {
+  async fn download(&self, config: &Config, query: &[String], opts: &DownloadOptions) -> Result<Wallpaper> {
     let wallhaven_config = &config.sources.wallhaven;
     let resolution = config.get_wallhaven_resolution()?;
 
@@ -179,7 +180,8 @@ impl WallpaperDownloader for WallhavenDownloader {
       .unwrap_or("jpg");
 
     let filename = format!("{}_{}", self.source_name(), FilesystemHelper::make_file_suffix());
-    let file_path = Path::new(&config.paths.downloads).join(&filename).with_extension(file_extension);
+    let download_dir = opts.output_dir.as_deref().unwrap_or(Path::new(&config.paths.downloads));
+    let file_path = download_dir.join(&filename).with_extension(file_extension);
 
     // Ensure download directory exists
     if let Some(parent) = file_path.parent() {
