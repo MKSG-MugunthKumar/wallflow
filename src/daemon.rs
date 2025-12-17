@@ -77,7 +77,7 @@ pub async fn run_foreground(config: Config) -> Result<()> {
 pub fn run_background(config: Config) -> Result<()> {
   // Create PID and log directories
   let home_dir = dirs::home_dir().context("Could not find home directory")?;
-  let runtime_dir = home_dir.join(".local/share/wallflow");
+  let runtime_dir = home_dir.join(".local/share/mksg/wallflow");
   std::fs::create_dir_all(&runtime_dir).context("Failed to create runtime directory")?;
 
   let pid_file = runtime_dir.join("wallflow.pid");
@@ -123,7 +123,7 @@ pub fn run_background(config: Config) -> Result<()> {
 /// Get the PID file path
 fn get_pid_file() -> Result<std::path::PathBuf> {
   let home_dir = dirs::home_dir().context("Could not find home directory")?;
-  Ok(home_dir.join(".local/share/wallflow/wallflow.pid"))
+  Ok(home_dir.join(".local/share/mksg/wallflow/wallflow.pid"))
 }
 
 /// Read the daemon PID from the PID file

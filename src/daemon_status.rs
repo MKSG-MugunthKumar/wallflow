@@ -248,7 +248,7 @@ impl DaemonStatusManager {
 /// Get the path for daemon status file
 fn get_status_file_path() -> Result<PathBuf> {
   let home_dir = dirs::home_dir().context("Could not find home directory")?;
-  let runtime_dir = home_dir.join(".local/share/wallflow");
+  let runtime_dir = home_dir.join(".local/share/mksg/wallflow");
   Ok(runtime_dir.join("daemon_status.json"))
 }
 
