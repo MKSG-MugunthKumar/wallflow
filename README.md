@@ -103,12 +103,21 @@ wallflow update --check
 
 ## Configuration
 
-Configuration file: `~/.config/wallflow/config.yml`
+Configuration file location:
+
+- **Linux**: `~/.config/mksg/wallflow/config.yml`
+- **macOS**: `~/Library/Application Support/mksg/wallflow/config.yml`
+
 Create it by copying the example:
 
 ```bash
-mkdir -p ~/.config/wallflow
-cp config.example.yml ~/.config/wallflow/config.yml
+# Linux
+mkdir -p ~/.config/mksg/wallflow
+cp config.example.yml ~/.config/mksg/wallflow/config.yml
+
+# macOS
+mkdir -p ~/Library/Application\ Support/mksg/wallflow
+cp config.example.yml ~/Library/Application\ Support/mksg/wallflow/config.yml
 ```
 
 See [config.example.yml](config.example.yml) for all options.
@@ -149,6 +158,10 @@ See [TODO.md](TODO.md) for planned features including:
 ## License
 
 MIT - See [LICENSE](LICENSE)
+
+## Trademark
+
+"wallflow" is a trademark of Mind Kraft Studios Group (MKSG). See [TRADEMARK.md](TRADEMARK.md) for usage guidelines.
 
 ## Acknowledgments
 
