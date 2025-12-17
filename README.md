@@ -1,5 +1,10 @@
 # wallflow
 
+[![Build Status](https://github.com/MKSG-MugunthKumar/wallflow/actions/workflows/release.yml/badge.svg)](https://github.com/MKSG-MugunthKumar/wallflow/actions/workflows/release.yml)
+[![Crates.io](https://img.shields.io/crates/v/wallflow)](https://crates.io/crates/wallflow)
+[![License](https://img.shields.io/github/license/MKSG-MugunthKumar/wallflow)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-blue)](https://github.com/MKSG-MugunthKumar/wallflow)
+
 **Elegant wallpaper management with smooth transitions**
 
 A modern, Rust-based wallpaper manager that brings fluidity to your Linux desktop with multiple sources, smooth transitions, and dynamic color schemes.
