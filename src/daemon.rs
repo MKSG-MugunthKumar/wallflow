@@ -168,6 +168,290 @@ pub fn reload_daemon() -> Result<()> {
   }
 }
 
+/// Check if daemon is running
+fn is_daemon_running() -> bool {
+  if let Ok(pid) = read_daemon_pid() {
+    // Check if process exists by sending signal 0
+    std::process::Command::new("kill")
+      .args(["-0", &pid.to_string()])
+      .output()
+      .map(|o| o.status.success())
+      .unwrap_or(false)
+  } else {
+    false
+  }
+}
+
+/// Show daemon status
+pub fn status_daemon() -> Result<()> {
+  println!("📊 wallflow Daemon Status");
+  println!();
+
+  if is_daemon_running() {
+    let pid = read_daemon_pid()?;
+    println!("   🟢 Status: Running");
+    println!("   📍 PID: {}", pid);
+
+    // Try to read status from daemon_status.json
+    let home_dir = dirs::home_dir().context("Could not find home directory")?;
+    let status_file = home_dir.join(".local/share/mksg/wallflow/daemon_status.json");
+    if status_file.exists() {
+      if let Ok(content) = std::fs::read_to_string(&status_file) {
+        if let Ok(status) = serde_json::from_str::<serde_json::Value>(&content) {
+          if let Some(current) = status.get("current_wallpaper").and_then(|v| v.as_str()) {
+            println!("   🖼️  Current: {}", current);
+          }
+          if let Some(next) = status.get("next_rotation").and_then(|v| v.as_str()) {
+            println!("   ⏰ Next rotation: {}", next);
+          }
+        }
+      }
+    }
+
+    let log_file = home_dir.join(".local/share/mksg/wallflow/wallflow.log");
+    println!("   📄 Log file: {}", log_file.display());
+  } else {
+    println!("   🔴 Status: Not running");
+    println!("   💡 Use 'wallflow daemon start' to start the daemon");
+  }
+
+  Ok(())
+}
+
+/// Get the path to the current executable
+fn get_executable_path() -> Result<String> {
+  std::env::current_exe()
+    .context("Could not determine executable path")?
+    .to_str()
+    .map(|s| s.to_string())
+    .context("Executable path is not valid UTF-8")
+}
+
+/// Install daemon to run at system startup
+pub fn install_daemon() -> Result<()> {
+  let exe_path = get_executable_path()?;
+
+  #[cfg(target_os = "linux")]
+  {
+    install_systemd_service(&exe_path)
+  }
+
+  #[cfg(target_os = "macos")]
+  {
+    install_launchd_service(&exe_path)
+  }
+
+  #[cfg(target_os = "windows")]
+  {
+    Err(anyhow::anyhow!("Windows service installation not yet implemented. Use Task Scheduler manually."))
+  }
+
+  #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+  {
+    Err(anyhow::anyhow!("Unsupported platform for daemon installation"))
+  }
+}
+
+/// Uninstall daemon from system startup
+pub fn uninstall_daemon() -> Result<()> {
+  #[cfg(target_os = "linux")]
+  {
+    uninstall_systemd_service()
+  }
+
+  #[cfg(target_os = "macos")]
+  {
+    uninstall_launchd_service()
+  }
+
+  #[cfg(target_os = "windows")]
+  {
+    Err(anyhow::anyhow!("Windows service uninstallation not yet implemented."))
+  }
+
+  #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+  {
+    Err(anyhow::anyhow!("Unsupported platform for daemon uninstallation"))
+  }
+}
+
+#[cfg(target_os = "linux")]
+fn install_systemd_service(exe_path: &str) -> Result<()> {
+  let home_dir = dirs::home_dir().context("Could not find home directory")?;
+  let service_dir = home_dir.join(".config/systemd/user");
+  std::fs::create_dir_all(&service_dir).context("Failed to create systemd user directory")?;
+
+  let service_file = service_dir.join("wallflow.service");
+
+  let service_content = format!(
+    r#"[Unit]
+Description=Wallflow Daemon
+After=default.target
+
+[Service]
+Type=simple
+ExecStart={} daemon start --foreground
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+"#,
+    exe_path
+  );
+
+  std::fs::write(&service_file, service_content).context("Failed to write service file")?;
+
+  println!("📝 Created service file: {}", service_file.display());
+
+  // Reload systemd and enable the service
+  let reload = std::process::Command::new("systemctl")
+    .args(["--user", "daemon-reload"])
+    .output()?;
+
+  if !reload.status.success() {
+    return Err(anyhow::anyhow!("Failed to reload systemd"));
+  }
+
+  let enable = std::process::Command::new("systemctl")
+    .args(["--user", "enable", "--now", "wallflow"])
+    .output()?;
+
+  if enable.status.success() {
+    println!("✅ wallflow daemon installed and started");
+    println!();
+    println!("   Manage with:");
+    println!("   systemctl --user status wallflow");
+    println!("   systemctl --user stop wallflow");
+    println!("   systemctl --user start wallflow");
+    println!("   journalctl --user -u wallflow -f");
+    Ok(())
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to enable service: {}",
+      String::from_utf8_lossy(&enable.stderr)
+    ))
+  }
+}
+
+#[cfg(target_os = "linux")]
+fn uninstall_systemd_service() -> Result<()> {
+  // Stop and disable the service
+  let _ = std::process::Command::new("systemctl")
+    .args(["--user", "stop", "wallflow"])
+    .output();
+
+  let disable = std::process::Command::new("systemctl")
+    .args(["--user", "disable", "wallflow"])
+    .output()?;
+
+  if !disable.status.success() {
+    warn!("Service may not have been enabled: {}", String::from_utf8_lossy(&disable.stderr));
+  }
+
+  // Remove the service file
+  let home_dir = dirs::home_dir().context("Could not find home directory")?;
+  let service_file = home_dir.join(".config/systemd/user/wallflow.service");
+
+  if service_file.exists() {
+    std::fs::remove_file(&service_file).context("Failed to remove service file")?;
+    println!("🗑️  Removed service file: {}", service_file.display());
+  }
+
+  // Reload systemd
+  let _ = std::process::Command::new("systemctl")
+    .args(["--user", "daemon-reload"])
+    .output();
+
+  println!("✅ wallflow daemon uninstalled");
+  Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn install_launchd_service(exe_path: &str) -> Result<()> {
+  let home_dir = dirs::home_dir().context("Could not find home directory")?;
+  let launch_agents_dir = home_dir.join("Library/LaunchAgents");
+  std::fs::create_dir_all(&launch_agents_dir).context("Failed to create LaunchAgents directory")?;
+
+  let plist_file = launch_agents_dir.join("com.mksg.wallflow.plist");
+  let log_dir = home_dir.join(".local/share/mksg/wallflow");
+  std::fs::create_dir_all(&log_dir).context("Failed to create log directory")?;
+
+  let plist_content = format!(
+    r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mksg.wallflow</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{}</string>
+        <string>daemon</string>
+        <string>start</string>
+        <string>--foreground</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>{}/wallflow.log</string>
+    <key>StandardErrorPath</key>
+    <string>{}/wallflow_error.log</string>
+</dict>
+</plist>
+"#,
+    exe_path,
+    log_dir.display(),
+    log_dir.display()
+  );
+
+  std::fs::write(&plist_file, plist_content).context("Failed to write plist file")?;
+
+  println!("📝 Created plist file: {}", plist_file.display());
+
+  // Load the service
+  let load = std::process::Command::new("launchctl")
+    .args(["load", plist_file.to_str().unwrap()])
+    .output()?;
+
+  if load.status.success() {
+    println!("✅ wallflow daemon installed and started");
+    println!();
+    println!("   Manage with:");
+    println!("   launchctl list | grep wallflow");
+    println!("   launchctl stop com.mksg.wallflow");
+    println!("   launchctl start com.mksg.wallflow");
+    Ok(())
+  } else {
+    Err(anyhow::anyhow!(
+      "Failed to load service: {}",
+      String::from_utf8_lossy(&load.stderr)
+    ))
+  }
+}
+
+#[cfg(target_os = "macos")]
+fn uninstall_launchd_service() -> Result<()> {
+  let home_dir = dirs::home_dir().context("Could not find home directory")?;
+  let plist_file = home_dir.join("Library/LaunchAgents/com.mksg.wallflow.plist");
+
+  if plist_file.exists() {
+    // Unload the service
+    let _ = std::process::Command::new("launchctl")
+      .args(["unload", plist_file.to_str().unwrap()])
+      .output();
+
+    // Remove the plist file
+    std::fs::remove_file(&plist_file).context("Failed to remove plist file")?;
+    println!("🗑️  Removed plist file: {}", plist_file.display());
+  }
+
+  println!("✅ wallflow daemon uninstalled");
+  Ok(())
+}
+
 /// Set wallpaper based on configured default source
 async fn set_wallpaper_by_source(config: &Config) -> Result<()> {
   let source = config.sources.default.as_str();

@@ -77,15 +77,8 @@ enum Commands {
   },
   /// Run as background daemon with automatic rotation
   Daemon {
-    /// Run in foreground (don't daemonize)
-    #[arg(short, long)]
-    foreground: bool,
-    /// Stop the running daemon
-    #[arg(short, long)]
-    stop: bool,
-    /// Reload daemon configuration (sends SIGHUP)
-    #[arg(short, long)]
-    reload: bool,
+    #[command(subcommand)]
+    daemon_command: DaemonCommands,
   },
   /// Show current configuration
   Config,
@@ -107,6 +100,34 @@ enum Commands {
   },
 }
 
+#[derive(Subcommand)]
+enum DaemonCommands {
+  /// Start daemon
+  Start {
+    /// Run in foreground (don't daemonize)
+    #[arg(short, long)]
+    foreground: bool,
+  },
+
+  /// Stop running daemon
+  Stop,
+
+  /// Show daemon status
+  Status,
+
+  /// Restart daemon
+  Restart,
+
+  /// Reload daemon configuration (sends SIGHUP)
+  Reload,
+
+  /// Install daemon to run at system startup
+  Install,
+
+  /// Uninstall daemon from system startup
+  Uninstall,
+}
+
 fn main() -> Result<()> {
   let cli = Cli::parse();
 
@@ -126,23 +147,26 @@ fn main() -> Result<()> {
   // Log system information and configuration details
   logging::log_system_info(&config);
 
-  // Handle daemon control commands (stop/reload) before runtime
-  if let Commands::Daemon { stop: true, .. } = cli.command {
-    return daemon::stop_daemon();
-  }
-  if let Commands::Daemon { reload: true, .. } = cli.command {
-    return daemon::reload_daemon();
-  }
-
-  // Handle background daemon BEFORE creating tokio runtime
+  // Handle daemon commands that don't need tokio runtime BEFORE creating it
   // (daemonize fork + new runtime doesn't work from within an existing runtime)
-  if let Commands::Daemon {
-    foreground: false,
-    stop: false,
-    reload: false,
-  } = cli.command
-  {
-    return daemon::run_background(config);
+  if let Commands::Daemon { daemon_command } = &cli.command {
+    match daemon_command {
+      DaemonCommands::Stop => return daemon::stop_daemon(),
+      DaemonCommands::Reload => return daemon::reload_daemon(),
+      DaemonCommands::Status => return daemon::status_daemon(),
+      DaemonCommands::Install => return daemon::install_daemon(),
+      DaemonCommands::Uninstall => return daemon::uninstall_daemon(),
+      DaemonCommands::Start { foreground: false } => return daemon::run_background(config),
+      DaemonCommands::Restart => {
+        // Stop if running, then start in background
+        let _ = daemon::stop_daemon(); // Ignore error if not running
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        return daemon::run_background(config);
+      }
+      DaemonCommands::Start { foreground: true } => {
+        // Fall through to async runtime for foreground mode
+      }
+    }
   }
 
   // Create tokio runtime for all other commands
@@ -183,15 +207,14 @@ async fn async_main(cli: Cli, config: Config) -> Result<()> {
     Commands::Unsplash { query } => {
       wallpaper::set_from_source(&config, "unsplash", &query, &download_opts).await?;
     }
-    Commands::Daemon {
-      foreground,
-      stop: _,
-      reload: _,
-    } => {
-      // Background daemon, stop, and reload are handled in main() before runtime creation
+    Commands::Daemon { daemon_command } => {
+      // Most daemon commands are handled in main() before runtime creation
       // Only foreground mode reaches here
-      debug_assert!(foreground, "Background daemon should be handled before async runtime");
-      daemon::run_foreground(config).await?;
+      if let DaemonCommands::Start { foreground: true } = daemon_command {
+        daemon::run_foreground(config).await?;
+      } else {
+        unreachable!("Non-foreground daemon commands should be handled before async runtime");
+      }
     }
     Commands::Config => {
       show_config(&config)?;
@@ -202,11 +225,17 @@ async fn async_main(cli: Cli, config: Config) -> Result<()> {
       println!("  # Set wallpaper from local collection");
       println!("  wallflow local");
       println!();
-      println!("  # Start daemon (background)");
-      println!("  wallflow daemon");
+      println!("  # Daemon management");
+      println!("  wallflow daemon start              # Start in background");
+      println!("  wallflow daemon start --foreground # Start in foreground (for testing)");
+      println!("  wallflow daemon stop               # Stop running daemon");
+      println!("  wallflow daemon status             # Show daemon status");
+      println!("  wallflow daemon restart            # Restart daemon");
+      println!("  wallflow daemon reload             # Reload configuration");
       println!();
-      println!("  # Start daemon (foreground for testing)");
-      println!("  wallflow daemon --foreground");
+      println!("  # Auto-start at system boot/login");
+      println!("  wallflow daemon install            # Install startup service");
+      println!("  wallflow daemon uninstall          # Remove startup service");
       println!();
       println!("  # Download from various sources");
       println!("  wallflow wallhaven nature mountains");
@@ -220,9 +249,6 @@ async fn async_main(cli: Cli, config: Config) -> Result<()> {
       println!("  wallflow platform-info");
       println!("  wallflow list-backends");
       println!("  wallflow list-sources");
-      println!();
-      println!("  # Add to your shell startup script for auto-start:");
-      println!("  echo 'wallflow daemon &' >> ~/.zshrc");
     }
     Commands::PlatformInfo => {
       let info = wallpaper::platform_info()?;
