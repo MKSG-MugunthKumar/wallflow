@@ -101,6 +101,36 @@ wallflow daemon --foreground
 wallflow update --check
 ```
 
+## Running as a Service (Linux)
+
+wallflow can run as a background service that automatically rotates your wallpaper.
+
+### Option 1: systemd (recommended)
+
+```bash
+# Install binary and service
+make install
+make install-service
+make enable-service
+
+# Management commands
+make status              # Check service status
+make logs                # Follow service logs
+make disable-service     # Stop and disable
+make uninstall-service   # Remove service file
+```
+
+### Option 2: XDG Autostart
+
+Simpler alternative that starts wallflow on login:
+
+```bash
+make install
+make install-autostart   # Starts on next login
+
+make uninstall-autostart # Remove
+```
+
 ## Configuration
 
 Configuration file location:
