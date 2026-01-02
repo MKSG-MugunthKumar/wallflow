@@ -2,7 +2,7 @@
 Type=Application
 Name=Wallflow
 Comment=Wallpaper rotation daemon
-Exec=wallflow daemon start --foreground
+Exec=@@WALLFLOW_BIN@@ daemon start --foreground
 Terminal=false
 Categories=Utility;
 X-GNOME-Autostart-enabled=true

@@ -3,6 +3,7 @@
 CARGO := cargo
 SYSTEMD_USER_DIR := $(HOME)/.config/systemd/user
 AUTOSTART_DIR := $(HOME)/.config/autostart
+WALLFLOW_BIN := $(shell which wallflow 2>/dev/null || echo "$(HOME)/.cargo/bin/wallflow")
 
 .PHONY: build release install install-service uninstall-service enable-service disable-service \
         install-autostart uninstall-autostart
@@ -56,8 +57,9 @@ install-autostart: install $(AUTOSTART_DIR)/wallflow.desktop
 
 $(AUTOSTART_DIR)/wallflow.desktop: systemd/wallflow.desktop
 	@mkdir -p $(AUTOSTART_DIR)
-	@install -m 644 $< $@
-	@echo "Installed wallflow.desktop to $(AUTOSTART_DIR)"
+	@sed 's|@@WALLFLOW_BIN@@|$(WALLFLOW_BIN)|g' $< > $@
+	@chmod 644 $@
+	@echo "Installed wallflow.desktop to $(AUTOSTART_DIR) (using $(WALLFLOW_BIN))"
 
 uninstall-autostart:
 	@rm -f $(AUTOSTART_DIR)/wallflow.desktop
