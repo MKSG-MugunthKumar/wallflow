@@ -19,7 +19,7 @@ install: release
 	$(CARGO) install --path .
 
 # Linux systemd service targets
-install-service: $(SYSTEMD_USER_DIR)/wallflow.service
+install-service: install $(SYSTEMD_USER_DIR)/wallflow.service
 	@echo "Service installed. Run 'make enable-service' to enable it."
 
 $(SYSTEMD_USER_DIR)/wallflow.service: systemd/wallflow.service
@@ -51,7 +51,7 @@ logs:
 	@journalctl --user -u wallflow.service -f
 
 # XDG autostart targets (alternative to systemd, simpler environment handling)
-install-autostart: $(AUTOSTART_DIR)/wallflow.desktop
+install-autostart: install $(AUTOSTART_DIR)/wallflow.desktop
 	@echo "Autostart installed. Wallflow will start on next login."
 
 $(AUTOSTART_DIR)/wallflow.desktop: systemd/wallflow.desktop
