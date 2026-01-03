@@ -20,6 +20,9 @@ pub struct WallpaperOptions {
   pub fps: Option<u32>,
   pub scaling: WallpaperScaling,
   pub monitor: MonitorSelection,
+  /// If true, spawn the wallpaper setter without waiting for completion.
+  /// Useful for daemon mode to avoid blocking during transitions.
+  pub fire_and_forget: bool,
 }
 
 /// How to scale/position the wallpaper
@@ -83,6 +86,7 @@ impl Default for WallpaperOptions {
       fps: None,
       scaling: WallpaperScaling::Fill,
       monitor: MonitorSelection::All,
+      fire_and_forget: false,
     }
   }
 }

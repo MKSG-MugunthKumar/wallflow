@@ -153,11 +153,6 @@ fn detect_available_linux_backends() -> Vec<String> {
     .collect()
 }
 
-#[cfg(not(target_os = "linux"))]
-fn detect_available_linux_backends() -> Vec<String> {
-  vec![]
-}
-
 impl std::fmt::Display for Platform {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {

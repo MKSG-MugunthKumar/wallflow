@@ -46,10 +46,11 @@ impl WallpaperBackend for AwwwBackend {
     let mut cmd = self.build_awww_command(image_path, options);
 
     debug!(
-      "Running awww: {} with transition: {:?}, fps: {:?}",
+      "Running awww: {} with transition: {:?}, fps: {:?}, fire_and_forget: {}",
       image_path.display(),
       options.transition,
-      options.fps
+      options.fps,
+      options.fire_and_forget
     );
 
     // Suppress awww's TTY output (progress animations)
@@ -57,15 +58,23 @@ impl WallpaperBackend for AwwwBackend {
     cmd.stdout(Stdio::null());
     cmd.stderr(Stdio::piped()); // Keep stderr for error reporting
 
-    let output = cmd.output().await.context("Failed to execute awww command")?;
-
-    if output.status.success() {
-      debug!("✅ awww wallpaper set successfully");
+    if options.fire_and_forget {
+      // Spawn without waiting - useful for daemon mode to avoid blocking during transitions
+      cmd.spawn().context("Failed to spawn awww command")?;
+      debug!("awww spawned (fire-and-forget mode)");
       Ok(())
     } else {
-      let stderr = String::from_utf8_lossy(&output.stderr);
-      warn!("awww failed: {}", stderr);
-      Err(anyhow::anyhow!("awww command failed: {}", stderr))
+      // Wait for completion - useful for CLI to report success/failure
+      let output = cmd.output().await.context("Failed to execute awww command")?;
+
+      if output.status.success() {
+        debug!("✅ awww wallpaper set successfully");
+        Ok(())
+      } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        warn!("awww failed: {}", stderr);
+        Err(anyhow::anyhow!("awww command failed: {}", stderr))
+      }
     }
   }
 

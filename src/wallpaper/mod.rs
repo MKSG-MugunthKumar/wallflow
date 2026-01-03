@@ -15,16 +15,27 @@ use tracing::{debug, info};
 
 /// Set wallpaper using the best available backend
 pub async fn apply_wallpaper(wallpaper_path: &Path, config: &Config) -> Result<()> {
+  apply_wallpaper_with_options(wallpaper_path, config, false).await
+}
+
+/// Set wallpaper with fire-and-forget option (for daemon mode)
+pub async fn apply_wallpaper_daemon(wallpaper_path: &Path, config: &Config) -> Result<()> {
+  apply_wallpaper_with_options(wallpaper_path, config, true).await
+}
+
+/// Internal function that handles both CLI and daemon modes
+async fn apply_wallpaper_with_options(wallpaper_path: &Path, config: &Config, fire_and_forget: bool) -> Result<()> {
   let registry = BackendRegistry::new();
   let backend = registry.get_best_backend().context("No wallpaper backends available")?;
 
-  let options = build_wallpaper_options(config);
+  let options = build_wallpaper_options(config, fire_and_forget);
 
   debug!(
-    "Applying wallpaper with {}, options: transition={:?}, scaling={:?}",
+    "Applying wallpaper with {}, options: transition={:?}, scaling={:?}, fire_and_forget={}",
     backend.name(),
     options.transition,
-    options.scaling
+    options.scaling,
+    options.fire_and_forget
   );
 
   backend
@@ -44,7 +55,7 @@ pub async fn apply_wallpaper(wallpaper_path: &Path, config: &Config) -> Result<(
 }
 
 /// Build wallpaper options from configuration
-fn build_wallpaper_options(config: &Config) -> WallpaperOptions {
+fn build_wallpaper_options(config: &Config, fire_and_forget: bool) -> WallpaperOptions {
   let transition = match &config.transition.transition_type {
     crate::config::TransitionType::Single(t) => Some(t.clone()),
     crate::config::TransitionType::Multiple(types) => {
@@ -60,6 +71,7 @@ fn build_wallpaper_options(config: &Config) -> WallpaperOptions {
     fps: Some(config.transition.fps),
     scaling: WallpaperScaling::Fill, // Default for now, could be configurable
     monitor: MonitorSelection::All,
+    fire_and_forget,
   }
 }
 
@@ -112,10 +124,32 @@ pub async fn set_from_source(config: &Config, source: &str, query: &[String], op
   Ok(())
 }
 
+/// Download and set wallpaper from source (daemon mode - fire and forget)
+pub async fn set_from_source_daemon(config: &Config, source: &str, query: &[String], opts: &crate::downloaders::DownloadOptions) -> Result<()> {
+  info!("Downloading wallpaper from {}", source);
+  let wallpaper = crate::downloaders::download_from_source(source, config, query, opts).await?;
+  debug!("Downloaded: {:?}", wallpaper);
+
+  if opts.no_set {
+    println!("{}", wallpaper.file_path.display());
+  } else {
+    apply_wallpaper_daemon(&wallpaper.file_path, config).await?;
+  }
+
+  Ok(())
+}
+
 /// Set wallpaper from local collection
 pub async fn set_local(config: &Config) -> Result<()> {
   let wallpaper_path = select_local_wallpaper(config)?;
   apply_wallpaper(&wallpaper_path, config).await?;
+  Ok(())
+}
+
+/// Set wallpaper from local collection (daemon mode - fire and forget)
+pub async fn set_local_daemon(config: &Config) -> Result<()> {
+  let wallpaper_path = select_local_wallpaper(config)?;
+  apply_wallpaper_daemon(&wallpaper_path, config).await?;
   Ok(())
 }
 
