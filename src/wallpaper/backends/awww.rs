@@ -31,10 +31,13 @@ impl AwwwBackend {
     // Set FPS
     if let Some(fps) = options.fps {
       cmd.args(["--transition-fps", &fps.to_string()]);
+      cmd.args(["--transition-step", &fps.to_string()]);
     }
 
-    // Set transition step (hardcoded for now, could be configurable)
-    cmd.args(["--transition-step", "90"]);
+    // Set duration
+    if let Some(duration) = options.duration {
+      cmd.args(["--transition-duration", &duration.to_string()]);
+    }
 
     cmd
   }
