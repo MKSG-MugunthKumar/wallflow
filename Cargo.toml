@@ -43,6 +43,10 @@ pkg-url = "{ repo }/releases/download/v{ version }/wallflow-x86_64-apple-darwin"
 [package.metadata.binstall.overrides.aarch64-apple-darwin]
 pkg-url = "{ repo }/releases/download/v{ version }/wallflow-aarch64-apple-darwin"
 
+[lib]
+name = "wallflow"
+path = "src/lib.rs"
+
 [[bin]]
 name = "wallflow"
 path = "src/main.rs"

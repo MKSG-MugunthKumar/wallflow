@@ -71,7 +71,8 @@ integration:
   pywal:
     enabled: true
     backend: "wal" # wal, haishoku, colorthief, colorz
-    notify_kitty: true # Send SIGUSR1 to Kitty to reload colors
+    notify_kitty: true # Deprecated - use reload_apps instead (kept for backward compat)
+  reload_apps: true # Send signals to terminals (kitty, ghostty) to reload colors
 
 # Logging
 logging:

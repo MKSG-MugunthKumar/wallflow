@@ -25,9 +25,10 @@ pub async fn generate_pywal_colors(wallpaper_path: &Path, config: &Config) {
           debug!("stdout: {}", stdout);
         }
 
-        // Notify Kitty to reload colors if enabled
-        if config.integration.pywal.notify_kitty {
-          notify_kitty().await;
+        // Notify apps to reload colors
+        // Use reload_apps (new) or notify_kitty (deprecated, backward compat)
+        if config.integration.reload_apps || config.integration.pywal.notify_kitty {
+          notify_apps().await;
         }
       } else {
         warn!("pywal failed: {}", stderr);
@@ -39,23 +40,33 @@ pub async fn generate_pywal_colors(wallpaper_path: &Path, config: &Config) {
   }
 }
 
-/// Send SIGUSR1 to all Kitty processes to trigger config reload
-async fn notify_kitty() {
-  let output = AsyncCommand::new("pkill").args(["-USR1", "kitty"]).output().await;
+/// Send signals to terminal apps to trigger config reload
+async fn notify_apps() {
+  // Kitty: SIGUSR1
+  notify_app("kitty", "USR1").await;
+
+  // Ghostty: SIGUSR2
+  notify_app("ghostty", "USR2").await;
+
+  // Restore terminal state after signals (prevents prompt corruption)
+  let _ = AsyncCommand::new("stty").arg("sane").output().await;
+}
+
+/// Send a signal to a process by name
+async fn notify_app(process_name: &str, signal: &str) {
+  let output = AsyncCommand::new("pkill").args([&format!("-{}", signal), process_name]).output().await;
 
   match output {
     Ok(output) => {
       if output.status.success() {
-        debug!("✅ Kitty notified to reload colors");
-        // Restore terminal state after signal (prevents prompt corruption)
-        let _ = AsyncCommand::new("stty").arg("sane").output().await;
+        debug!("✅ {} notified to reload colors (SIG{})", process_name, signal);
       } else {
         // pkill returns non-zero if no processes matched - that's fine
-        debug!("No Kitty processes found to notify");
+        debug!("No {} processes found to notify", process_name);
       }
     }
     Err(e) => {
-      debug!("Could not notify Kitty: {}", e);
+      debug!("Could not notify {}: {}", process_name, e);
     }
   }
 }

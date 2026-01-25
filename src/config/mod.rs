@@ -135,6 +135,9 @@ pub struct CleanupConfig {
 pub struct IntegrationConfig {
   #[serde(default)]
   pub pywal: PywalConfig,
+  /// Send signals to apps (kitty, ghostty, etc.) to reload colors after template generation
+  #[serde(default)]
+  pub reload_apps: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -143,7 +146,8 @@ pub struct PywalConfig {
   pub enabled: bool,
   #[serde(default)]
   pub backend: Option<String>,
-  /// Send SIGUSR1 to Kitty to reload colors after pywal generates color scheme
+  /// Deprecated: Use integration.reload_apps instead
+  /// Kept for backward compatibility - will be removed in future version
   #[serde(default)]
   pub notify_kitty: bool,
 }

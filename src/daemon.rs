@@ -195,16 +195,15 @@ pub fn status_daemon() -> Result<()> {
     // Try to read status from daemon_status.json
     let home_dir = dirs::home_dir().context("Could not find home directory")?;
     let status_file = home_dir.join(".local/share/mksg/wallflow/daemon_status.json");
-    if status_file.exists() {
-      if let Ok(content) = std::fs::read_to_string(&status_file) {
-        if let Ok(status) = serde_json::from_str::<serde_json::Value>(&content) {
-          if let Some(current) = status.get("current_wallpaper").and_then(|v| v.as_str()) {
-            println!("   🖼️  Current: {}", current);
-          }
-          if let Some(next) = status.get("next_rotation").and_then(|v| v.as_str()) {
-            println!("   ⏰ Next rotation: {}", next);
-          }
-        }
+    if status_file.exists()
+      && let Ok(content) = std::fs::read_to_string(&status_file)
+      && let Ok(status) = serde_json::from_str::<serde_json::Value>(&content)
+    {
+      if let Some(current) = status.get("current_wallpaper").and_then(|v| v.as_str()) {
+        println!("   🖼️  Current: {}", current);
+      }
+      if let Some(next) = status.get("next_rotation").and_then(|v| v.as_str()) {
+        println!("   ⏰ Next rotation: {}", next);
       }
     }
 
@@ -243,7 +242,9 @@ pub fn install_daemon() -> Result<()> {
 
   #[cfg(target_os = "windows")]
   {
-    Err(anyhow::anyhow!("Windows service installation not yet implemented. Use Task Scheduler manually."))
+    Err(anyhow::anyhow!(
+      "Windows service installation not yet implemented. Use Task Scheduler manually."
+    ))
   }
 
   #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
@@ -305,9 +306,7 @@ WantedBy=default.target
   println!("📝 Created service file: {}", service_file.display());
 
   // Reload systemd and enable the service
-  let reload = std::process::Command::new("systemctl")
-    .args(["--user", "daemon-reload"])
-    .output()?;
+  let reload = std::process::Command::new("systemctl").args(["--user", "daemon-reload"]).output()?;
 
   if !reload.status.success() {
     return Err(anyhow::anyhow!("Failed to reload systemd"));
@@ -327,23 +326,16 @@ WantedBy=default.target
     println!("   journalctl --user -u wallflow -f");
     Ok(())
   } else {
-    Err(anyhow::anyhow!(
-      "Failed to enable service: {}",
-      String::from_utf8_lossy(&enable.stderr)
-    ))
+    Err(anyhow::anyhow!("Failed to enable service: {}", String::from_utf8_lossy(&enable.stderr)))
   }
 }
 
 #[cfg(target_os = "linux")]
 fn uninstall_systemd_service() -> Result<()> {
   // Stop and disable the service
-  let _ = std::process::Command::new("systemctl")
-    .args(["--user", "stop", "wallflow"])
-    .output();
+  let _ = std::process::Command::new("systemctl").args(["--user", "stop", "wallflow"]).output();
 
-  let disable = std::process::Command::new("systemctl")
-    .args(["--user", "disable", "wallflow"])
-    .output()?;
+  let disable = std::process::Command::new("systemctl").args(["--user", "disable", "wallflow"]).output()?;
 
   if !disable.status.success() {
     warn!("Service may not have been enabled: {}", String::from_utf8_lossy(&disable.stderr));
@@ -359,9 +351,7 @@ fn uninstall_systemd_service() -> Result<()> {
   }
 
   // Reload systemd
-  let _ = std::process::Command::new("systemctl")
-    .args(["--user", "daemon-reload"])
-    .output();
+  let _ = std::process::Command::new("systemctl").args(["--user", "daemon-reload"]).output();
 
   println!("✅ wallflow daemon uninstalled");
   Ok(())
@@ -425,10 +415,7 @@ fn install_launchd_service(exe_path: &str) -> Result<()> {
     println!("   launchctl start com.mksg.wallflow");
     Ok(())
   } else {
-    Err(anyhow::anyhow!(
-      "Failed to load service: {}",
-      String::from_utf8_lossy(&load.stderr)
-    ))
+    Err(anyhow::anyhow!("Failed to load service: {}", String::from_utf8_lossy(&load.stderr)))
   }
 }
 
@@ -462,7 +449,9 @@ async fn set_wallpaper_by_source(config: &Config) -> Result<()> {
     "local" => wallpaper::set_local_daemon(config).await,
     // All remote sources use the generic set_from_source with empty query
     // (daemon uses config defaults, not CLI args)
-    "wallhaven" | "picsum" | "apod" | "bing" | "reddit" | "earthview" | "unsplash" => wallpaper::set_from_source_daemon(config, source, &[], &opts).await,
+    "wallhaven" | "picsum" | "apod" | "bing" | "reddit" | "earthview" | "unsplash" => {
+      wallpaper::set_from_source_daemon(config, source, &[], &opts).await
+    }
     other => {
       warn!("Unknown source '{}', falling back to local", other);
       wallpaper::set_local_daemon(config).await
