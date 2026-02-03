@@ -94,6 +94,7 @@ impl BackendRegistry {
     match display_server {
       crate::platform::LinuxDisplayServer::Wayland(compositor) => {
         // Wayland backends in priority order
+        debug!("Registering Wayland backends for compositor: {:?}", compositor);
 
         use crate::wallpaper::backends::AwwwBackend;
         self.register_backend(Arc::new(AwwwBackend::new()));
@@ -105,7 +106,16 @@ impl BackendRegistry {
           crate::platform::WaylandCompositor::Hyprland => {
             self.register_backend(Arc::new(HyprpaperBackend::new()));
           }
-          _ => {}
+          crate::platform::WaylandCompositor::Gnome => {
+            debug!("GNOME detected — only awww backend is supported for Wayland/GNOME");
+            debug!("awww available: {}", which::which("awww").is_ok());
+          }
+          crate::platform::WaylandCompositor::Kde => {
+            debug!("KDE detected — only awww backend is supported for Wayland/KDE");
+          }
+          crate::platform::WaylandCompositor::Generic => {
+            debug!("Generic Wayland compositor — only awww backend is supported");
+          }
         }
       }
 

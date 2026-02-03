@@ -57,14 +57,26 @@ pub fn detect_platform() -> Result<Platform> {
 /// Detect Linux display server and compositor
 #[cfg(target_os = "linux")]
 fn detect_linux_platform() -> Result<Platform> {
+  let wayland_display = env::var("WAYLAND_DISPLAY").ok();
+  let xdg_session_type = env::var("XDG_SESSION_TYPE").ok();
+  let xdg_current_desktop = env::var("XDG_CURRENT_DESKTOP").ok();
+  let x11_display = env::var("DISPLAY").ok();
+
+  tracing::debug!(
+    "Platform detection: WAYLAND_DISPLAY={:?}, XDG_SESSION_TYPE={:?}, XDG_CURRENT_DESKTOP={:?}, DISPLAY={:?}",
+    wayland_display, xdg_session_type, xdg_current_desktop, x11_display
+  );
+
   // Check if we're running under Wayland
-  if env::var("WAYLAND_DISPLAY").is_ok() || env::var("XDG_SESSION_TYPE").map(|s| s == "wayland").unwrap_or(false) {
+  if wayland_display.is_some() || xdg_session_type.as_deref() == Some("wayland") {
     let compositor = detect_wayland_compositor();
+    tracing::debug!("Detected Wayland compositor: {:?}", compositor);
     return Ok(Platform::Linux(LinuxDisplayServer::Wayland(compositor)));
   }
 
   // Check if we're running under X11
-  if env::var("DISPLAY").is_ok() || env::var("XDG_SESSION_TYPE").map(|s| s == "x11").unwrap_or(false) {
+  if x11_display.is_some() || xdg_session_type.as_deref() == Some("x11") {
+    tracing::debug!("Detected X11 display server");
     return Ok(Platform::Linux(LinuxDisplayServer::X11));
   }
 

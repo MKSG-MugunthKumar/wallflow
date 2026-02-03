@@ -48,13 +48,18 @@ impl WallpaperBackend for AwwwBackend {
   async fn set_wallpaper(&self, image_path: &Path, options: &WallpaperOptions) -> Result<()> {
     let mut cmd = self.build_awww_command(image_path, options);
 
+    let awww_path = which::which("awww").map(|p| p.display().to_string()).unwrap_or_else(|_| "not found".to_string());
     debug!(
-      "Running awww: {} with transition: {:?}, fps: {:?}, fire_and_forget: {}",
+      "Running awww ({}): {} with transition: {:?}, fps: {:?}, fire_and_forget: {}",
+      awww_path,
       image_path.display(),
       options.transition,
       options.fps,
       options.fire_and_forget
     );
+
+    // Log the full command for debugging
+    debug!("awww command: {:?}", cmd.as_std());
 
     // Suppress awww's TTY output (progress animations)
     cmd.stdin(Stdio::null());
@@ -63,19 +68,28 @@ impl WallpaperBackend for AwwwBackend {
 
     if options.fire_and_forget {
       // Spawn without waiting - useful for daemon mode to avoid blocking during transitions
-      cmd.spawn().context("Failed to spawn awww command")?;
-      debug!("awww spawned (fire-and-forget mode)");
-      Ok(())
+      match cmd.spawn() {
+        Ok(child) => {
+          debug!("awww spawned (fire-and-forget mode), pid: {:?}", child.id());
+          Ok(())
+        }
+        Err(e) => {
+          warn!("Failed to spawn awww command: {}", e);
+          Err(anyhow::anyhow!("Failed to spawn awww command: {}", e))
+        }
+      }
     } else {
       // Wait for completion - useful for CLI to report success/failure
       let output = cmd.output().await.context("Failed to execute awww command")?;
 
+      debug!("awww exit status: {:?}", output.status);
+
       if output.status.success() {
-        debug!("✅ awww wallpaper set successfully");
+        debug!("awww wallpaper set successfully");
         Ok(())
       } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        warn!("awww failed: {}", stderr);
+        warn!("awww failed (exit {}): {}", output.status, stderr);
         Err(anyhow::anyhow!("awww command failed: {}", stderr))
       }
     }
