@@ -64,7 +64,10 @@ fn detect_linux_platform() -> Result<Platform> {
 
   tracing::debug!(
     "Platform detection: WAYLAND_DISPLAY={:?}, XDG_SESSION_TYPE={:?}, XDG_CURRENT_DESKTOP={:?}, DISPLAY={:?}",
-    wayland_display, xdg_session_type, xdg_current_desktop, x11_display
+    wayland_display,
+    xdg_session_type,
+    xdg_current_desktop,
+    x11_display
   );
 
   // Check if we're running under Wayland

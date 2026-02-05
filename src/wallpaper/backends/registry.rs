@@ -12,6 +12,12 @@ pub struct BackendRegistry {
   backends: Vec<Arc<dyn WallpaperBackend + Send + Sync>>,
 }
 
+impl Default for BackendRegistry {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl BackendRegistry {
   /// Create a new backend registry with platform-appropriate backends
   pub fn new() -> Self {

@@ -15,6 +15,7 @@ use tracing::{debug, warn};
 /// Backend using sindresorhus/macos-wallpaper CLI tool
 /// Install via: brew install wallpaper
 #[cfg(target_os = "macos")]
+#[derive(Default)]
 pub struct MacOSWallpaperBackend;
 
 #[cfg(target_os = "macos")]
@@ -106,6 +107,13 @@ impl WallpaperBackend for MacOSWallpaperBackend {
 #[cfg(target_os = "macos")]
 pub struct SwiftNativeBackend {
   helper_path: Option<PathBuf>,
+}
+
+#[cfg(target_os = "macos")]
+impl Default for SwiftNativeBackend {
+  fn default() -> Self {
+    Self::new()
+  }
 }
 
 #[cfg(target_os = "macos")]
@@ -298,6 +306,7 @@ impl WallpaperBackend for SwiftNativeBackend {
 /// Fallback AppleScript backend
 /// Works without dependencies but may trigger Gatekeeper warnings
 #[cfg(target_os = "macos")]
+#[derive(Default)]
 pub struct AppleScriptBackend;
 
 #[cfg(target_os = "macos")]

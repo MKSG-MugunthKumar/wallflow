@@ -48,7 +48,9 @@ impl WallpaperBackend for AwwwBackend {
   async fn set_wallpaper(&self, image_path: &Path, options: &WallpaperOptions) -> Result<()> {
     let mut cmd = self.build_awww_command(image_path, options);
 
-    let awww_path = which::which("awww").map(|p| p.display().to_string()).unwrap_or_else(|_| "not found".to_string());
+    let awww_path = which::which("awww")
+      .map(|p| p.display().to_string())
+      .unwrap_or_else(|_| "not found".to_string());
     debug!(
       "Running awww ({}): {} with transition: {:?}, fps: {:?}, fire_and_forget: {}",
       awww_path,

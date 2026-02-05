@@ -25,7 +25,11 @@ pub async fn apply_wallpaper_daemon(wallpaper_path: &Path, config: &Config) -> R
 
 /// Internal function that handles both CLI and daemon modes
 async fn apply_wallpaper_with_options(wallpaper_path: &Path, config: &Config, fire_and_forget: bool) -> Result<()> {
-  debug!("apply_wallpaper_with_options: path={}, fire_and_forget={}", wallpaper_path.display(), fire_and_forget);
+  debug!(
+    "apply_wallpaper_with_options: path={}, fire_and_forget={}",
+    wallpaper_path.display(),
+    fire_and_forget
+  );
 
   let registry = BackendRegistry::new();
 

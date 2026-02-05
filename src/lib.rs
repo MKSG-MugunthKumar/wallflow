@@ -21,8 +21,12 @@
 pub mod config;
 pub mod display;
 pub mod downloaders;
+pub mod integration;
+pub mod platform;
+pub mod wallpaper;
 
 // Re-export main types for convenience
 pub use config::Config;
 pub use downloaders::traits::Wallpaper;
 pub use downloaders::{DownloadOptions, download_from_source, list_sources};
+pub use wallpaper::apply_wallpaper;

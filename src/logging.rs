@@ -43,8 +43,8 @@ pub fn init_logging(config: &Config, verbose_override: bool) -> Result<()> {
   if verbose_override {
     tracing::debug!("Verbose mode enabled via CLI flag");
   }
-  if effective_config.file.is_some() {
-    tracing::debug!("File logging enabled: {}", effective_config.file.as_ref().unwrap());
+  if let Some(file) = &effective_config.file {
+    tracing::debug!("File logging enabled: {}", file);
   }
 
   Ok(())
@@ -210,8 +210,8 @@ pub fn log_system_info(config: &Config) {
     debug!("Pywal integration: disabled");
   }
 
-  if config.logging.file.is_some() {
-    debug!("📝 File logging enabled: {}", config.logging.file.as_ref().unwrap());
+  if let Some(file) = &config.logging.file {
+    debug!("📝 File logging enabled: {}", file);
   }
 }
 
