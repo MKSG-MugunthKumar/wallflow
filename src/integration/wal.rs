@@ -3,7 +3,8 @@ use std::path::Path;
 use tokio::process::Command as AsyncCommand;
 use tracing::{debug, warn};
 
-/// Generate pywal color scheme
+/// Generate pywal color scheme (legacy - kept for library API compatibility)
+#[allow(dead_code)]
 pub async fn generate_pywal_colors(wallpaper_path: &Path, config: &Config) {
   let mut cmd = AsyncCommand::new("wal");
   cmd.args(["-sni", &wallpaper_path.to_string_lossy()]);

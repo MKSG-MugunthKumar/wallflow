@@ -57,12 +57,95 @@ async fn apply_wallpaper_with_options(wallpaper_path: &Path, config: &Config, fi
   // Set KDE Plasma wallpaper if available (ensures KDE apps inherit colors)
   integration::set_kde_wallpaper(wallpaper_path).await;
 
-  if config.integration.pywal.enabled {
-    integration::generate_pywal_colors(wallpaper_path, config).await
+  // Color theming pipeline
+  if config.colors.enabled {
+    apply_color_theme(wallpaper_path, config);
   }
+
   info!("✅ Wallpaper {} applied successfully using {}", wallpaper_path.display(), backend.name());
 
   Ok(())
+}
+
+/// Apply color theme after wallpaper is set.
+/// Runs native k-means++ extraction or shells out to pywal.
+fn apply_color_theme(wallpaper_path: &Path, config: &Config) {
+  match config.colors.engine.as_str() {
+    "native" => {
+      let options = crate::colors::ExtractionOptions {
+        contrast_ratio: config.colors.contrast_ratio,
+        background_intensity: config.colors.background_intensity,
+        prefers_dark: config.colors.prefer_dark,
+        ..Default::default()
+      };
+
+      let extractor = crate::colors::ColorExtractor::new();
+      match extractor.extract(wallpaper_path, &options) {
+        Ok(scheme) => {
+          let output_dir = crate::templates::TemplateEngine::default_output_dir();
+          if let Err(e) = std::fs::create_dir_all(&output_dir) {
+            tracing::warn!("Failed to create output dir: {}", e);
+            return;
+          }
+
+          // Save color scheme JSON
+          match scheme.to_json() {
+            Ok(json) => {
+              let scheme_file = output_dir.join("colors.json");
+              if let Err(e) = std::fs::write(&scheme_file, &json) {
+                tracing::warn!("Failed to write colors.json: {}", e);
+              } else {
+                debug!("Color scheme saved to {}", scheme_file.display());
+              }
+            }
+            Err(e) => tracing::warn!("Failed to serialize color scheme: {}", e),
+          }
+
+          // Render templates if available
+          let tpl_dir = crate::templates::templates_dir();
+          if tpl_dir.exists() {
+            match crate::templates::TemplateEngine::render_all(&tpl_dir, &output_dir, &scheme) {
+              Ok(rendered) => {
+                if !rendered.is_empty() {
+                  debug!("Rendered {} templates", rendered.len());
+                  if config.integration.reload_apps {
+                    crate::templates::TemplateEngine::notify_apps(&rendered);
+                  }
+                }
+              }
+              Err(e) => tracing::warn!("Failed to render templates: {}", e),
+            }
+          }
+        }
+        Err(e) => {
+          tracing::warn!("Color extraction failed: {}", e);
+        }
+      }
+    }
+    "pywal" => {
+      // Legacy pywal path - handled by the existing integration module
+      // We can't call async from here, so spawn a blocking task
+      let path = wallpaper_path.to_path_buf();
+      let pywal_config = config.integration.clone();
+      std::thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build();
+        if let Ok(rt) = rt {
+          rt.block_on(async {
+            // Build a minimal config for pywal
+            let mut cmd = tokio::process::Command::new("wal");
+            cmd.args(["-sni", &path.to_string_lossy()]);
+            if let Some(backend) = &pywal_config.pywal.backend {
+              cmd.args(["--backend", backend, "--vte"]);
+            }
+            let _ = cmd.output().await;
+          });
+        }
+      });
+    }
+    other => {
+      tracing::warn!("Unknown colors engine '{}', skipping", other);
+    }
+  }
 }
 
 /// Build wallpaper options from configuration

@@ -14,7 +14,6 @@ mod wal;
 pub mod macos;
 
 pub use kde::set_kde_wallpaper;
-pub use wal::generate_pywal_colors;
 
 #[cfg(target_os = "macos")]
 #[allow(unused_imports)]

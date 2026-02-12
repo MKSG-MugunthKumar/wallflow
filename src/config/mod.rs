@@ -12,6 +12,8 @@ pub struct Config {
   pub sources: SourcesConfig,
   pub cleanup: CleanupConfig,
   pub integration: IntegrationConfig,
+  #[serde(default)]
+  pub colors: ColorsConfig,
   pub logging: LoggingConfig,
   #[serde(default)]
   pub advanced: AdvancedConfig,
@@ -131,7 +133,7 @@ pub struct CleanupConfig {
   pub auto_cleanup: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct IntegrationConfig {
   #[serde(default)]
   pub pywal: PywalConfig,
@@ -140,7 +142,7 @@ pub struct IntegrationConfig {
   pub reload_apps: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PywalConfig {
   #[serde(default = "default_true")]
   pub enabled: bool,
@@ -150,6 +152,52 @@ pub struct PywalConfig {
   /// Kept for backward compatibility - will be removed in future version
   #[serde(default)]
   pub notify_kitty: bool,
+}
+
+/// Color extraction and theming configuration
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ColorsConfig {
+  /// Enable color extraction when setting wallpapers
+  #[serde(default = "default_true")]
+  pub enabled: bool,
+
+  /// Color engine: "native" (k-means++) or "pywal" (shell out to wal)
+  #[serde(default = "default_colors_engine")]
+  pub engine: String,
+
+  /// WCAG-inspired contrast level (1.5 = low, 4.5 = AAA)
+  #[serde(default = "default_contrast_ratio")]
+  pub contrast_ratio: f32,
+
+  /// Background intensity adjustment (0.3 = subtle, 0.9 = intense)
+  #[serde(default = "default_background_intensity")]
+  pub background_intensity: f32,
+
+  /// Force dark/light mode: null = auto-detect, true = dark, false = light
+  #[serde(default)]
+  pub prefer_dark: Option<bool>,
+}
+
+impl Default for ColorsConfig {
+  fn default() -> Self {
+    Self {
+      enabled: true,
+      engine: "native".to_string(),
+      contrast_ratio: 3.0,
+      background_intensity: 0.6,
+      prefer_dark: None,
+    }
+  }
+}
+
+fn default_colors_engine() -> String {
+  "native".to_string()
+}
+fn default_contrast_ratio() -> f32 {
+  3.0
+}
+fn default_background_intensity() -> f32 {
+  0.6
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -249,10 +297,17 @@ impl Config {
     }
   }
 
-  /// Expand environment variables in paths
+  /// Expand environment variables in paths and apply migrations
   pub fn expand_paths(&mut self) -> Result<()> {
     self.paths.local = resolve_wallpaper_path(&self.paths.local);
     self.paths.downloads = resolve_wallpaper_path(&self.paths.downloads);
+
+    // Migration: if pywal integration is enabled and colors engine is default,
+    // auto-set engine to "pywal" to preserve existing behavior
+    if self.integration.pywal.enabled && self.colors.engine == "native" {
+      self.colors.engine = "pywal".to_string();
+    }
+
     Ok(())
   }
 
@@ -311,6 +366,7 @@ impl Default for Config {
         auto_cleanup: true,
       },
       integration: IntegrationConfig::default(),
+      colors: ColorsConfig::default(),
       logging: LoggingConfig::default(),
       advanced: AdvancedConfig::default(),
     }

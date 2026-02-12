@@ -31,6 +31,14 @@ pub async fn run_foreground(config: Config) -> Result<()> {
     sleep(Duration::from_secs(delay_secs)).await;
   }
 
+  // Download templates if native color engine is enabled
+  if config.colors.enabled && config.colors.engine == "native" {
+    match crate::templates::ensure_templates() {
+      Ok(dir) => info!("Templates ready at {}", dir.display()),
+      Err(e) => warn!("Failed to download templates (will retry later): {}", e),
+    }
+  }
+
   // Set initial wallpaper
   info!("Setting initial wallpaper...");
   if let Err(e) = set_wallpaper_by_source(&config).await {

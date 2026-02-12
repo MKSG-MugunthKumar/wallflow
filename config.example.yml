@@ -66,6 +66,15 @@ cleanup:
   keep_count: 10 # Number of downloads to retain
   auto_cleanup: true
 
+# Color extraction and theming (pywal successor)
+# wallflow extracts colors from wallpapers and renders templates for your apps
+colors:
+  enabled: true
+  engine: "native"          # "native" (k-means++) or "pywal" (shell out to wal)
+  contrast_ratio: 3.0       # 1.5 (low contrast) to 4.5 (WCAG AAA)
+  background_intensity: 0.6 # 0.3 (subtle) to 0.9 (intense)
+  # prefer_dark: null       # null = auto-detect, true = force dark, false = force light
+
 # Desktop integration
 integration:
   pywal:
