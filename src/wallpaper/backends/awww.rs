@@ -9,6 +9,7 @@ use tokio::process::Command as AsyncCommand;
 use tracing::{debug, warn};
 
 /// Backend for awww wallpaper setter with transition effects
+#[derive(Default)]
 pub struct AwwwBackend;
 
 impl AwwwBackend {

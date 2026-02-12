@@ -8,6 +8,7 @@ use tokio::process::Command as AsyncCommand;
 use tracing::debug;
 
 /// swaybg backend for Sway
+#[derive(Default)]
 pub struct SwaybgBackend;
 
 impl SwaybgBackend {
@@ -63,6 +64,7 @@ impl WallpaperBackend for SwaybgBackend {
 }
 
 /// hyprpaper backend for Hyprland
+#[derive(Default)]
 pub struct HyprpaperBackend;
 
 impl HyprpaperBackend {
@@ -120,6 +122,7 @@ impl WallpaperBackend for HyprpaperBackend {
 }
 
 /// feh backend for X11
+#[derive(Default)]
 pub struct FehBackend;
 
 impl FehBackend {
@@ -174,6 +177,7 @@ impl WallpaperBackend for FehBackend {
 }
 
 /// nitrogen backend for X11
+#[derive(Default)]
 pub struct NitrogenBackend;
 
 impl NitrogenBackend {
@@ -228,6 +232,7 @@ impl WallpaperBackend for NitrogenBackend {
 }
 
 /// xwallpaper backend for X11
+#[derive(Default)]
 pub struct XwallpaperBackend;
 
 impl XwallpaperBackend {
