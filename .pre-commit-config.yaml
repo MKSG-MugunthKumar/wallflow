@@ -96,21 +96,6 @@ repos:
         language: system
         files: Cargo\.(toml|lock)
         pass_filenames: false
-      # Ensure no debugging prints left in code
-      - id: no-debug-prints
-        name: No debug prints
-        entry: 'grep -r "^\s*\(println!\|dbg!\|eprintln!\)" src/'
-        language: system
-        files: \.rs$
-        pass_filenames: false
-      # Check for TODO/FIXME comments in production files
-      - id: check-todos
-        name: Check for TODO/FIXME in production code
-        entry: 'grep -r "TODO\|FIXME" src/'
-        language: system
-        files: \.rs$
-        pass_filenames: false
-        # This will fail if TODOs are found - remove this hook if you want TODOs allowed
 # Optional: Rust dependency checking (uncomment if desired)
 # - repo: https://github.com/EmbarkStudios/cargo-deny
 #   rev: 0.16.1
