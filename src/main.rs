@@ -346,7 +346,7 @@ fn handle_colors(config: &Config, image: &std::path::Path, contrast: Option<f32>
   let options = colors::ExtractionOptions {
     contrast_ratio: contrast.unwrap_or(config.colors.contrast_ratio),
     background_intensity: background.unwrap_or(config.colors.background_intensity),
-    prefers_dark: config.colors.prefer_dark,
+    prefers_dark: config.colors.prefer_dark.or_else(platform::detect_dark_mode),
     ..Default::default()
   };
 
@@ -374,7 +374,7 @@ async fn handle_templates(config: &Config, image: Option<&std::path::Path>, sche
     let options = colors::ExtractionOptions {
       contrast_ratio: config.colors.contrast_ratio,
       background_intensity: config.colors.background_intensity,
-      prefers_dark: config.colors.prefer_dark,
+      prefers_dark: config.colors.prefer_dark.or_else(platform::detect_dark_mode),
       ..Default::default()
     };
     colors::ColorExtractor::new().extract(path, &options)?
@@ -416,7 +416,7 @@ async fn handle_apply(config: &Config, image: &std::path::Path) -> Result<()> {
     let options = colors::ExtractionOptions {
       contrast_ratio: config.colors.contrast_ratio,
       background_intensity: config.colors.background_intensity,
-      prefers_dark: config.colors.prefer_dark,
+      prefers_dark: config.colors.prefer_dark.or_else(platform::detect_dark_mode),
       ..Default::default()
     };
 

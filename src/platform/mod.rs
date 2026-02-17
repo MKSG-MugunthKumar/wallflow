@@ -187,6 +187,98 @@ impl std::fmt::Display for Platform {
   }
 }
 
+/// Detect whether the system is using dark mode.
+///
+/// Returns `Some(true)` for dark mode, `Some(false)` for light mode,
+/// or `None` if detection fails or the platform is unsupported.
+pub fn detect_dark_mode() -> Option<bool> {
+  #[cfg(target_os = "linux")]
+  return detect_dark_mode_linux();
+
+  #[cfg(target_os = "macos")]
+  return detect_dark_mode_macos();
+
+  #[cfg(target_os = "windows")]
+  return detect_dark_mode_windows();
+
+  #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+  return None;
+}
+
+#[cfg(target_os = "linux")]
+fn detect_dark_mode_linux() -> Option<bool> {
+  // Try GNOME / GTK-based desktops
+  if let Ok(output) = std::process::Command::new("gsettings")
+    .args(["get", "org.gnome.desktop.interface", "color-scheme"])
+    .output()
+    && output.status.success()
+  {
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    if stdout.contains("prefer-dark") {
+      tracing::debug!("System dark mode detected via gsettings (GNOME)");
+      return Some(true);
+    } else if stdout.contains("default") || stdout.contains("prefer-light") {
+      tracing::debug!("System light mode detected via gsettings (GNOME)");
+      return Some(false);
+    }
+  }
+
+  // Try KDE Plasma
+  if let Ok(output) = std::process::Command::new("kreadconfig5")
+    .args(["--group", "General", "--key", "ColorScheme"])
+    .output()
+    && output.status.success()
+  {
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let is_dark = stdout.to_lowercase().contains("dark");
+    tracing::debug!("System {} mode detected via kreadconfig5 (KDE)", if is_dark { "dark" } else { "light" });
+    return Some(is_dark);
+  }
+
+  tracing::debug!("Could not detect system dark mode on Linux");
+  None
+}
+
+#[cfg(target_os = "macos")]
+fn detect_dark_mode_macos() -> Option<bool> {
+  // AppleInterfaceStyle key only exists when dark mode is active
+  if let Ok(output) = std::process::Command::new("defaults")
+    .args(["read", "-g", "AppleInterfaceStyle"])
+    .output()
+  {
+    let is_dark = output.status.success();
+    tracing::debug!("System {} mode detected via defaults (macOS)", if is_dark { "dark" } else { "light" });
+    return Some(is_dark);
+  }
+
+  tracing::debug!("Could not detect system dark mode on macOS");
+  None
+}
+
+#[cfg(target_os = "windows")]
+fn detect_dark_mode_windows() -> Option<bool> {
+  // AppsUseLightTheme: 0 = dark, 1 = light
+  if let Ok(output) = std::process::Command::new("reg")
+    .args([
+      "query",
+      r"HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+      "/v",
+      "AppsUseLightTheme",
+    ])
+    .output()
+  {
+    if output.status.success() {
+      let stdout = String::from_utf8_lossy(&output.stdout);
+      let is_dark = stdout.contains("0x0");
+      tracing::debug!("System {} mode detected via registry (Windows)", if is_dark { "dark" } else { "light" });
+      return Some(is_dark);
+    }
+  }
+
+  tracing::debug!("Could not detect system dark mode on Windows");
+  None
+}
+
 impl std::fmt::Display for WaylandCompositor {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {

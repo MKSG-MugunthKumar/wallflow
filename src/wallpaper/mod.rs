@@ -75,7 +75,7 @@ fn apply_color_theme(wallpaper_path: &Path, config: &Config) {
       let options = crate::colors::ExtractionOptions {
         contrast_ratio: config.colors.contrast_ratio,
         background_intensity: config.colors.background_intensity,
-        prefers_dark: config.colors.prefer_dark,
+        prefers_dark: config.colors.prefer_dark.or_else(crate::platform::detect_dark_mode),
         ..Default::default()
       };
 
