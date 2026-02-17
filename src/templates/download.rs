@@ -132,11 +132,12 @@ fn extract_tarball(bytes: &[u8], templates_dir: &Path) -> Result<()> {
     if entry.header().entry_type().is_dir() {
       fs::create_dir_all(&dest)?;
     } else if entry.header().entry_type().is_file() {
+      // Read the new content from the tar entry
+      let mut new_content = Vec::new();
+      entry.read_to_end(&mut new_content)?;
+
       // Don't overwrite user-modified files
       if dest.exists() {
-        let mut new_content = Vec::new();
-        entry.read_to_end(&mut new_content)?;
-
         let existing_content = fs::read(&dest).unwrap_or_default();
         if existing_content != new_content {
           debug!("Skipping modified template file: {}", dest.display());
@@ -147,8 +148,7 @@ fn extract_tarball(bytes: &[u8], templates_dir: &Path) -> Result<()> {
       if let Some(parent) = dest.parent() {
         fs::create_dir_all(parent)?;
       }
-      let mut file = fs::File::create(&dest)?;
-      std::io::copy(&mut entry, &mut file)?;
+      fs::write(&dest, &new_content)?;
     }
   }
 
