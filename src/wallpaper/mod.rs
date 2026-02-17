@@ -68,7 +68,7 @@ async fn apply_wallpaper_with_options(wallpaper_path: &Path, config: &Config, fi
 }
 
 /// Apply color theme after wallpaper is set.
-/// Runs native k-means++ extraction or shells out to pywal.
+/// Runs native k-means++ extraction and renders templates.
 fn apply_color_theme(wallpaper_path: &Path, config: &Config) {
   match config.colors.engine.as_str() {
     "native" => {
@@ -121,26 +121,6 @@ fn apply_color_theme(wallpaper_path: &Path, config: &Config) {
           tracing::warn!("Color extraction failed: {}", e);
         }
       }
-    }
-    "pywal" => {
-      // Legacy pywal path - handled by the existing integration module
-      // We can't call async from here, so spawn a blocking task
-      let path = wallpaper_path.to_path_buf();
-      let pywal_config = config.integration.clone();
-      std::thread::spawn(move || {
-        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build();
-        if let Ok(rt) = rt {
-          rt.block_on(async {
-            // Build a minimal config for pywal
-            let mut cmd = tokio::process::Command::new("wal");
-            cmd.args(["-sni", &path.to_string_lossy()]);
-            if let Some(backend) = &pywal_config.pywal.backend {
-              cmd.args(["--backend", backend, "--vte"]);
-            }
-            let _ = cmd.output().await;
-          });
-        }
-      });
     }
     other => {
       tracing::warn!("Unknown colors engine '{}', skipping", other);

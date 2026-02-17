@@ -1,7 +1,7 @@
 //! Color extraction using k-means clustering
 //!
 //! This module extracts dominant colors from images and generates
-//! terminal-compatible color schemes (pywal format).
+//! terminal-compatible color schemes.
 
 mod extractor;
 mod scheme;

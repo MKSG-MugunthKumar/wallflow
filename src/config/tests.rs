@@ -21,7 +21,7 @@ fn test_config_default() {
   assert_eq!(config.advanced.timeout, 0);
 
   // Test nested defaults (from Default trait, not serde defaults)
-  assert!(!config.integration.pywal.enabled); // Default trait sets to false
+  assert!(!config.integration.reload_apps); // Default trait sets to false
   assert_eq!(config.sources.local.formats, Vec::<String>::new()); // Default trait sets to empty vec
 }
 
@@ -69,8 +69,7 @@ cleanup:
   auto_cleanup: false
 
 integration:
-  pywal:
-    enabled: false
+  reload_apps: false
 
 logging:
   enabled: false
@@ -147,8 +146,7 @@ sources:
 cleanup:
   keep_count: 10
 integration:
-  pywal:
-    enabled: true
+  reload_apps: true
 logging:
   enabled: true
   level: info
@@ -177,8 +175,7 @@ sources:
 cleanup:
   keep_count: 10
 integration:
-  pywal:
-    enabled: true
+  reload_apps: true
 logging:
   enabled: true
   level: info
@@ -323,8 +320,7 @@ sources:
 cleanup:
   keep_count: 10
 integration:
-  pywal:
-    enabled: true
+  reload_apps: true
 logging:
   enabled: true
   level: info
@@ -358,8 +354,7 @@ sources:
 cleanup:
   keep_count: 10
 integration:
-  pywal:
-    enabled: true
+  reload_apps: true
 logging:
   enabled: true
   level: info

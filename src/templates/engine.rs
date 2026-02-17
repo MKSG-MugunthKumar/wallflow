@@ -26,7 +26,7 @@ pub struct TemplateEngine;
 impl TemplateEngine {
   /// Build a variable map from a color scheme
   ///
-  /// This creates all the pywal-compatible variables like:
+  /// This creates all the template variables like:
   /// - `{background}`, `{foreground}`, `{cursor}`
   /// - `{color0}` through `{color15}`
   /// - `{color0.strip}`, `{color0.rgb}`, `{color0.rgba}`, etc.

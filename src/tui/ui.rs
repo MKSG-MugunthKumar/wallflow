@@ -250,7 +250,7 @@ fn format_config_summary(app: &App) -> String {
   details.push(format!("🎯 Source: {}", app.config.sources.default));
   details.push(format!("⏱️  Interval: {}m", app.config.timer.interval));
   details.push(format!("🔀 Randomize: {}", app.config.timer.randomize));
-  details.push(format!("🎨 Pywal: {}", if app.config.integration.pywal.enabled { "on" } else { "off" }));
+  details.push(format!("🎨 Colors: {}", if app.config.colors.enabled { "on" } else { "off" }));
   details.push(format!("📂 Recursive: {}", if app.config.sources.local.recursive { "yes" } else { "no" }));
   details.join("\n")
 }

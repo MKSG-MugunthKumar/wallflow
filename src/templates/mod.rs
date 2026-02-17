@@ -1,6 +1,6 @@
 //! Template rendering for terminal and app theming
 //!
-//! This module handles rendering color scheme templates in pywal-compatible format.
+//! This module handles rendering color scheme templates from extracted wallpaper colors.
 //! Templates use simple `{variable}` substitution.
 //!
 //! Templates are downloaded from the wallflow-templates GitHub repo on first use

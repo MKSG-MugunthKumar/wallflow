@@ -194,7 +194,7 @@ impl ColorScheme {
     serde_json::from_str(json)
   }
 
-  /// Export as shell variables (pywal-compatible)
+  /// Export as shell variables
   pub fn to_shell_format(&self) -> String {
     let mut lines = Vec::new();
 

@@ -200,16 +200,6 @@ pub fn log_system_info(config: &Config) {
     }
   }
 
-  // Log integration status
-  if config.integration.pywal.enabled {
-    debug!(
-      "Pywal integration: enabled (backend: {})",
-      config.integration.pywal.backend.as_deref().unwrap_or("default")
-    );
-  } else {
-    debug!("Pywal integration: disabled");
-  }
-
   if let Some(file) = &config.logging.file {
     debug!("📝 File logging enabled: {}", file);
   }

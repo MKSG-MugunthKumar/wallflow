@@ -135,23 +135,9 @@ pub struct CleanupConfig {
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct IntegrationConfig {
-  #[serde(default)]
-  pub pywal: PywalConfig,
   /// Send signals to apps (kitty, ghostty, etc.) to reload colors after template generation
   #[serde(default)]
   pub reload_apps: bool,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
-pub struct PywalConfig {
-  #[serde(default = "default_true")]
-  pub enabled: bool,
-  #[serde(default)]
-  pub backend: Option<String>,
-  /// Deprecated: Use integration.reload_apps instead
-  /// Kept for backward compatibility - will be removed in future version
-  #[serde(default)]
-  pub notify_kitty: bool,
 }
 
 /// Color extraction and theming configuration
@@ -161,7 +147,7 @@ pub struct ColorsConfig {
   #[serde(default = "default_true")]
   pub enabled: bool,
 
-  /// Color engine: "native" (k-means++) or "pywal" (shell out to wal)
+  /// Color engine: "native" (k-means++)
   #[serde(default = "default_colors_engine")]
   pub engine: String,
 
@@ -301,12 +287,6 @@ impl Config {
   pub fn expand_paths(&mut self) -> Result<()> {
     self.paths.local = resolve_wallpaper_path(&self.paths.local);
     self.paths.downloads = resolve_wallpaper_path(&self.paths.downloads);
-
-    // Migration: if pywal integration is enabled and colors engine is default,
-    // auto-set engine to "pywal" to preserve existing behavior
-    if self.integration.pywal.enabled && self.colors.engine == "native" {
-      self.colors.engine = "pywal".to_string();
-    }
 
     Ok(())
   }

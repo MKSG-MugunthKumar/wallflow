@@ -4,11 +4,9 @@
 //! and tools for enhanced wallpaper management:
 //!
 //! - **KDE Plasma**: Ensures KDE apps inherit wallpaper colors
-//! - **pywal**: Generates color schemes from wallpapers (Linux)
 //! - **macOS**: Controls system appearance and accent colors
 
 mod kde;
-mod wal;
 
 #[cfg(target_os = "macos")]
 pub mod macos;

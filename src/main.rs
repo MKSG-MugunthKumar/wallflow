@@ -523,7 +523,7 @@ fn show_config(config: &Config) -> Result<()> {
   println!("  Background intensity: {}", config.colors.background_intensity);
   println!();
   println!("Integration:");
-  println!("  Pywal: {}", if config.integration.pywal.enabled { "enabled" } else { "disabled" });
+  println!("  Reload apps: {}", if config.integration.reload_apps { "enabled" } else { "disabled" });
 
   Ok(())
 }
