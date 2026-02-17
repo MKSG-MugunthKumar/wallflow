@@ -137,9 +137,3 @@ impl WallpaperBackend for AwwwBackend {
     Ok(())
   }
 }
-
-impl Default for AwwwBackend {
-  fn default() -> Self {
-    Self::new()
-  }
-}

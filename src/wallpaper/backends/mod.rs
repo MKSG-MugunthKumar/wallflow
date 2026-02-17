@@ -15,6 +15,9 @@ pub mod registry;
 #[cfg(target_os = "linux")]
 pub mod awww;
 
+#[cfg(target_os = "linux")]
+pub mod gnome;
+
 pub use registry::BackendRegistry;
 pub use traits::WallpaperBackend;
 

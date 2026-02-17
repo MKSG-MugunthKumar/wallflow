@@ -21,7 +21,6 @@ readme = "README.md"
 repository = "https://github.com/MKSG-MugunthKumar/wallflow"
 version = "0.5.0"
 
-
 [package.metadata.bundle]
 category = "Graphics & Design"
 identifier = "sg.mk.wallflow"

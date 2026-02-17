@@ -113,8 +113,8 @@ impl BackendRegistry {
             self.register_backend(Arc::new(HyprpaperBackend::new()));
           }
           crate::platform::WaylandCompositor::Gnome => {
-            debug!("GNOME detected — only awww backend is supported for Wayland/GNOME");
-            debug!("awww available: {}", which::which("awww").is_ok());
+            debug!("GNOME detected — registering gsettings backend");
+            self.register_backend(Arc::new(super::gnome::GnomeBackend::new()));
           }
           crate::platform::WaylandCompositor::Kde => {
             debug!("KDE detected — only awww backend is supported for Wayland/KDE");
