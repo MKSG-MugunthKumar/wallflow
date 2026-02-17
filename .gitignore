@@ -4,9 +4,7 @@
 *.pdb
 
 # Cargo
-Cargo.lock
-# Uncomment to commit Cargo.lock for applications (keep commented for libraries)
-# !Cargo.lock
+# Cargo.lock is committed — wallflow is a binary application
 
 # IDE files
 .vscode/

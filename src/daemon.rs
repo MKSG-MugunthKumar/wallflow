@@ -33,7 +33,7 @@ pub async fn run_foreground(config: Config) -> Result<()> {
 
   // Download templates if native color engine is enabled
   if config.colors.enabled && config.colors.engine == "native" {
-    match crate::templates::ensure_templates() {
+    match crate::templates::ensure_templates().await {
       Ok(dir) => info!("Templates ready at {}", dir.display()),
       Err(e) => warn!("Failed to download templates (will retry later): {}", e),
     }

@@ -254,7 +254,7 @@ async fn async_main(cli: Cli, config: Config) -> Result<()> {
       handle_colors(&config, &image, contrast, background, &format)?;
     }
     Commands::Templates { image, scheme } => {
-      handle_templates(&config, image.as_deref(), scheme.as_deref())?;
+      handle_templates(&config, image.as_deref(), scheme.as_deref()).await?;
     }
     Commands::Apply { image } => {
       handle_apply(&config, &image).await?;
@@ -363,7 +363,7 @@ fn handle_colors(config: &Config, image: &std::path::Path, contrast: Option<f32>
   Ok(())
 }
 
-fn handle_templates(config: &Config, image: Option<&std::path::Path>, scheme_path: Option<&std::path::Path>) -> Result<()> {
+async fn handle_templates(config: &Config, image: Option<&std::path::Path>, scheme_path: Option<&std::path::Path>) -> Result<()> {
   use anyhow::Context;
 
   // Get or create a color scheme
@@ -383,7 +383,7 @@ fn handle_templates(config: &Config, image: Option<&std::path::Path>, scheme_pat
   };
 
   // Ensure templates are downloaded
-  let tpl_dir = templates::ensure_templates()?;
+  let tpl_dir = templates::ensure_templates().await?;
   let output_dir = templates::TemplateEngine::default_output_dir();
 
   info!("Rendering templates from {}", tpl_dir.display());

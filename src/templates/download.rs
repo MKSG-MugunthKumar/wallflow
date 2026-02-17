@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use tracing::{debug, info, warn};
 
-const TEMPLATES_REPO: &str = "mksg-ltd/wallflow-templates";
+const TEMPLATES_REPO: &str = "MKSG-MugunthKumar/wallflow-templates";
 const TEMPLATES_VERSION: &str = "v1.0.0";
 
 /// Get the templates directory path
@@ -29,7 +29,7 @@ pub fn templates_dir() -> PathBuf {
 /// Ensure templates are available locally.
 /// Downloads from GitHub releases on first use or when a new version is available.
 /// Returns the path to the templates directory.
-pub fn ensure_templates() -> Result<PathBuf> {
+pub async fn ensure_templates() -> Result<PathBuf> {
   let dir = templates_dir();
   let version_file = dir.join(".version");
 
@@ -44,7 +44,7 @@ pub fn ensure_templates() -> Result<PathBuf> {
 
   // Need to download or update
   info!("Downloading wallflow templates {}...", TEMPLATES_VERSION);
-  match download_templates(&dir) {
+  match download_templates(&dir).await {
     Ok(()) => {
       // Write version marker
       fs::write(&version_file, TEMPLATES_VERSION).context("Failed to write templates version file")?;
@@ -77,36 +77,42 @@ fn has_templates(dir: &Path) -> bool {
 }
 
 /// Download templates tarball from GitHub and extract to templates dir
-fn download_templates(templates_dir: &Path) -> Result<()> {
+async fn download_templates(templates_dir: &Path) -> Result<()> {
   let url = format!("https://github.com/{}/archive/refs/tags/{}.tar.gz", TEMPLATES_REPO, TEMPLATES_VERSION);
 
   debug!("Fetching templates from {}", url);
 
-  // Use reqwest in blocking mode (this runs during init, not in async context)
-  let response = reqwest::blocking::get(&url).context("Failed to fetch templates tarball")?;
+  let response = reqwest::get(&url).await.context("Failed to fetch templates tarball")?;
 
   if !response.status().is_success() {
     anyhow::bail!("Failed to download templates: HTTP {}", response.status());
   }
 
-  let bytes = response.bytes().context("Failed to read response body")?;
+  let bytes = response.bytes().await.context("Failed to read response body")?;
 
-  // Decompress gzip
-  let gz = flate2::read::GzDecoder::new(&bytes[..]);
+  // Extract tarball on a blocking thread (CPU-bound work)
+  let dest = templates_dir.to_path_buf();
+  tokio::task::spawn_blocking(move || extract_tarball(&bytes, &dest))
+    .await
+    .context("Template extraction task failed")??;
 
-  // Extract tar
+  Ok(())
+}
+
+/// Extract .wallflowtemplate bundles from a gzipped tarball
+fn extract_tarball(bytes: &[u8], templates_dir: &Path) -> Result<()> {
+  let gz = flate2::read::GzDecoder::new(bytes);
   let mut archive = tar::Archive::new(gz);
 
-  // Create templates dir
   fs::create_dir_all(templates_dir).context("Failed to create templates directory")?;
 
   // Extract .wallflowtemplate directories from the tarball
-  // GitHub tarballs have a top-level directory like "wallflow-templates-1.0.0/"
+  // GitHub tarballs have a top-level directory like "Owner-repo-<sha>/"
   for entry in archive.entries().context("Failed to read tar entries")? {
     let mut entry = entry.context("Failed to read tar entry")?;
     let path = entry.path().context("Failed to get entry path")?.into_owned();
 
-    // Skip the top-level directory prefix (e.g., "wallflow-templates-1.0.0/")
+    // Skip the top-level directory prefix
     let components: Vec<_> = path.components().collect();
     if components.len() < 2 {
       continue;
@@ -133,7 +139,6 @@ fn download_templates(templates_dir: &Path) -> Result<()> {
 
         let existing_content = fs::read(&dest).unwrap_or_default();
         if existing_content != new_content {
-          // User has modified this file - skip it
           debug!("Skipping modified template file: {}", dest.display());
           continue;
         }
