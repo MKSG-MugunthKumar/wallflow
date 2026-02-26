@@ -294,8 +294,10 @@ fn install_systemd_service(exe_path: &str) -> Result<()> {
 
   let service_content = format!(
     r#"[Unit]
-Description=Wallflow Daemon
-After=default.target
+Description=Wallflow Wallpaper Daemon
+Documentation=https://github.com/MindkraftStudiosGroup/wallflow
+After=graphical-session.target
+PartOf=graphical-session.target
 
 [Service]
 Type=simple
@@ -303,8 +305,14 @@ ExecStart={} daemon start --foreground
 Restart=on-failure
 RestartSec=5
 
+# Pass graphical session environment variables for display detection
+PassEnvironment=WAYLAND_DISPLAY XDG_SESSION_TYPE DISPLAY XDG_CURRENT_DESKTOP DBUS_SESSION_BUS_ADDRESS
+
+# Ensure ~/.local/bin and ~/.cargo/bin are in PATH for backend tools (awww, swww, etc.)
+Environment=PATH=%h/.local/bin:%h/.cargo/bin:/usr/local/bin:/usr/bin
+
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
 "#,
     exe_path
   );
