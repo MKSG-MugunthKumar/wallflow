@@ -8,10 +8,16 @@
 
 mod kde;
 
+#[cfg(target_os = "linux")]
+mod cosmic;
+
 #[cfg(target_os = "macos")]
 pub mod macos;
 
 pub use kde::set_kde_wallpaper;
+
+#[cfg(target_os = "linux")]
+pub use cosmic::set_cosmic_accent;
 
 #[cfg(target_os = "macos")]
 #[allow(unused_imports)]

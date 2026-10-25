@@ -1,5 +1,5 @@
 Name:           wallflow
-Version:        0.5.2
+Version:        0.6.0
 Release:        1%{?dist}
 Summary:        Elegant wallpaper management with smooth transitions
 
@@ -53,6 +53,9 @@ install -Dm644 README.md %{buildroot}%{_docdir}/%{name}/README.md
 %{_docdir}/%{name}/
 
 %changelog
+* Mon Oct 26 2026 Mugunth Kumar <mk@mk.sg> - 0.6.0-1
+- Add live COSMIC accent color updates from generated wallpaper colors
+
 * Wed Feb 26 2026 Mugunth Kumar <mk@mk.sg> - 0.5.2-1
 - Fix systemd service missing environment variables for GNOME
 - Add DBUS_SESSION_BUS_ADDRESS to PassEnvironment for gsettings

@@ -82,6 +82,11 @@ fn apply_color_theme(wallpaper_path: &Path, config: &Config) {
       let extractor = crate::colors::ColorExtractor::new();
       match extractor.extract(wallpaper_path, &options) {
         Ok(scheme) => {
+          // Use the generated scheme's cursor color as the desktop accent.
+          // COSMIC applies this through its watched theme config files.
+          #[cfg(target_os = "linux")]
+          crate::integration::set_cosmic_accent(&scheme.cursor);
+
           let output_dir = crate::templates::TemplateEngine::default_output_dir();
           if let Err(e) = std::fs::create_dir_all(&output_dir) {
             tracing::warn!("Failed to create output dir: {}", e);
