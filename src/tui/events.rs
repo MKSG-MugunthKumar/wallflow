@@ -93,10 +93,8 @@ async fn handle_global_keys(app: &mut App, key: &KeyEvent) -> Result<bool> {
     }
 
     // Clear messages
-    (KeyModifiers::NONE, KeyCode::Char('c')) => {
-      if app.view_mode == ViewMode::Browse {
-        app.clear_messages();
-      }
+    (KeyModifiers::NONE, KeyCode::Char('c')) if app.view_mode == ViewMode::Browse => {
+      app.clear_messages();
     }
 
     _ => {}

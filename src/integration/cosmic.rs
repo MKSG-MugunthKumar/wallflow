@@ -9,7 +9,7 @@ use crate::colors::Rgb;
 /// COSMIC watches its per-key config files, so the theme updates without a
 /// session restart. COSMIC has two on-disk formats; use the newest schema
 /// installed on the system.
-pub fn set_cosmic_accent(color: &Rgb) {
+pub fn set_cosmic_accent(color: &Rgb, contrast_ratio: f32) {
   let Some(config_dir) = cosmic_config_dir() else {
     return;
   };
@@ -19,12 +19,12 @@ pub fn set_cosmic_accent(color: &Rgb) {
     return;
   };
 
-  let value = match version.as_str() {
-    "v2" => accent_v2(color),
-    _ => accent_v1(color),
-  };
-
   for mode in ["Dark", "Light"] {
+    let accent = adjust_accent_for_mode(color, mode == "Dark", contrast_ratio);
+    let value = match version.as_str() {
+      "v2" => accent_v2(&accent),
+      _ => accent_v1(&accent),
+    };
     let path = config_dir.join(format!("com.system76.CosmicTheme.{mode}")).join(&version).join("accent");
     if let Err(error) = write_config_value(&path, &value) {
       tracing::warn!("Failed to update COSMIC {mode} accent color: {error}");
@@ -32,6 +32,26 @@ pub fn set_cosmic_accent(color: &Rgb) {
       tracing::info!("Updated COSMIC {mode} accent color");
     }
   }
+}
+
+/// Apply the same contrast setting used by the generated terminal palette,
+/// tuning the accent for the background of each COSMIC theme mode.
+fn adjust_accent_for_mode(color: &Rgb, is_dark: bool, contrast_ratio: f32) -> Rgb {
+  let normalized = (contrast_ratio.clamp(1.5, 4.5) - 1.5) / 3.0;
+
+  if is_dark {
+    let threshold = 0.15 + normalized * 0.30;
+    if color.luminance() < threshold {
+      return color.lightened(0.10 + normalized * 0.25);
+    }
+  } else {
+    let threshold = 0.85 - normalized * 0.30;
+    if color.luminance() > threshold {
+      return color.darkened(0.20 + normalized * 0.30);
+    }
+  }
+
+  *color
 }
 
 fn cosmic_config_dir() -> Option<PathBuf> {

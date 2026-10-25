@@ -48,6 +48,7 @@ pub enum MonitorSelection {
 }
 
 /// Trait for wallpaper backend implementations
+#[allow(clippy::double_must_use)] // async_trait marks the generated future must-use itself
 #[async_trait]
 #[allow(dead_code)]
 pub trait WallpaperBackend {

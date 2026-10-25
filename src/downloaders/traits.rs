@@ -16,6 +16,7 @@ pub struct Wallpaper {
 }
 
 /// Trait for wallpaper downloader implementations
+#[allow(clippy::double_must_use)] // async_trait marks the generated future must-use itself
 #[async_trait]
 pub trait WallpaperDownloader {
   /// Download a wallpaper based on the request
