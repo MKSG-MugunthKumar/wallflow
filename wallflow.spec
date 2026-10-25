@@ -1,5 +1,5 @@
 Name:           wallflow
-Version:        0.6.0
+Version:        0.6.1
 Release:        1%{?dist}
 Summary:        Elegant wallpaper management with smooth transitions
 
@@ -53,6 +53,10 @@ install -Dm644 README.md %{buildroot}%{_docdir}/%{name}/README.md
 %{_docdir}/%{name}/
 
 %changelog
+* Mon Oct 26 2026 Mugunth Kumar <mk@mk.sg> - 0.6.1-1
+- Apply configured contrast adjustment to COSMIC accent colors
+- Fix Clippy warnings in async traits and TUI key handling
+
 * Mon Oct 26 2026 Mugunth Kumar <mk@mk.sg> - 0.6.0-1
 - Add live COSMIC accent color updates from generated wallpaper colors
 
