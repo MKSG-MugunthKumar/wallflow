@@ -90,7 +90,7 @@ async-trait = "0.1"
 
 # HTTP client (for wallhaven/picsum)
 # Using rustls-tls to avoid OpenSSL dependency for cross-compilation
-reqwest = { version = "0.11", default-features = false, features = [
+reqwest = { version = "0.12", default-features = false, features = [
   "blocking",
   "json",
   "rustls-tls",

@@ -120,6 +120,11 @@ pub struct RedditConfig {
   /// Default subreddit(s) to use (e.g., "wallpapers" or "wallpapers+earthporn")
   #[serde(default = "default_reddit_subreddit")]
   pub subreddit: String,
+  /// Optional Reddit API application credentials for OAuth access.
+  #[serde(default)]
+  pub client_id: Option<String>,
+  #[serde(default)]
+  pub client_secret: Option<String>,
 }
 
 fn default_reddit_subreddit() -> String {

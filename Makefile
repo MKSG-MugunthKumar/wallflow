@@ -5,7 +5,7 @@ SYSTEMD_USER_DIR := $(HOME)/.config/systemd/user
 AUTOSTART_DIR := $(HOME)/.config/autostart
 WALLFLOW_BIN := $(shell which wallflow 2>/dev/null || echo "$(HOME)/.cargo/bin/wallflow")
 
-.PHONY: build release install setup install-service uninstall-service enable-service disable-service \
+.PHONY: build release install setup audit install-service uninstall-service enable-service disable-service \
         install-autostart uninstall-autostart
 
 # Development setup — install all tools needed for pre-commit hooks and CI
@@ -15,6 +15,10 @@ setup:
 	pip install --user pre-commit yamllint || pipx install pre-commit && pipx install yamllint
 	pre-commit install --install-hooks
 	@echo "Done. Run 'pre-commit run --all-files' to verify."
+
+# Check Cargo.lock against the RustSec advisory database (install with `make setup`).
+audit:
+	$(CARGO) audit
 
 # Build targets
 build:

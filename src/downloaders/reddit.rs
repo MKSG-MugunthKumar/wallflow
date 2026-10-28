@@ -49,6 +49,11 @@ struct RedditPost {
   over_18: bool,
 }
 
+#[derive(Deserialize)]
+struct RedditToken {
+  access_token: String,
+}
+
 /// Reddit wallpaper downloader
 pub struct RedditDownloader;
 
@@ -81,20 +86,58 @@ impl WallpaperDownloader for RedditDownloader {
     // Use first query param as subreddit, or default
     let subreddit = query.first().map(|s| s.as_str()).unwrap_or(DEFAULT_SUBREDDIT);
 
-    // Build Reddit JSON URL
-    let reddit_url = format!("https://www.reddit.com/r/{}.json?limit=100", subreddit);
+    // Reddit increasingly restricts unauthenticated JSON requests. Use OAuth
+    // when credentials are configured, while retaining public access where available.
+    let reddit_config = &config.sources.reddit;
+    let client_id = reddit_config.client_id.as_deref().filter(|v| !v.is_empty());
+    let client_secret = reddit_config.client_secret.as_deref().filter(|v| !v.is_empty());
+    let client = Client::from(&config.advanced);
+    let token = match (client_id, client_secret) {
+      (Some(id), Some(secret)) => {
+        let response = client
+          .post("https://www.reddit.com/api/v1/access_token")
+          .basic_auth(id, Some(secret))
+          .form(&[("grant_type", "client_credentials")])
+          .send()
+          .await
+          .context("Failed to request Reddit OAuth token")?;
+        if !response.status().is_success() {
+          anyhow::bail!(
+            "Reddit OAuth token request failed with status {}. Check sources.reddit.client_id and client_secret.",
+            response.status()
+          );
+        }
+        Some(
+          response
+            .json::<RedditToken>()
+            .await
+            .context("Reddit OAuth returned an invalid token response")?
+            .access_token,
+        )
+      }
+      (None, None) => None,
+      _ => anyhow::bail!("Reddit OAuth requires both sources.reddit.client_id and client_secret"),
+    };
+
+    let host = if token.is_some() { "oauth.reddit.com" } else { "www.reddit.com" };
+    let reddit_url = format!("https://{}/r/{}.json?limit=100", host, subreddit);
     debug!("Fetching from Reddit: {}", reddit_url);
 
-    let client = Client::from(&config.advanced);
-    let response = client.get(&reddit_url).send().await.context("Failed to send request to Reddit")?;
+    let mut request = client.get(&reddit_url);
+    if let Some(token) = &token {
+      request = request.bearer_auth(token);
+    }
+    let response = request.send().await.context("Failed to send request to Reddit")?;
 
     if !response.status().is_success() {
       let status = response.status();
-      let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-      return Err(anyhow!("Reddit API request failed with status {}: {}", status, error_text));
+      return Err(anyhow!(
+        "Reddit API request failed with status {}. Reddit may require OAuth credentials; configure sources.reddit.client_id and client_secret.",
+        status
+      ));
     }
 
-    let reddit_data: RedditResponse = response.json().await.context("Failed to parse Reddit API response")?;
+    let reddit_data: RedditResponse = response.json().await.context("Reddit returned a non-JSON response. Unauthenticated Reddit API access may be blocked; configure sources.reddit.client_id and client_secret (OAuth app credentials).")?;
 
     if reddit_data.data.children.is_empty() {
       return Err(anyhow!("No posts found in r/{}", subreddit));

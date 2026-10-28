@@ -56,6 +56,9 @@ sources:
   # CLI: wallflow reddit [subreddit]
   reddit:
     subreddit: "wallpapers" # Default subreddit (can also use "wallpapers+earthporn")
+    # Optional OAuth app credentials from reddit.com/prefs/apps
+    # client_id: ""
+    # client_secret: ""
 
   # Note: bing and earthview require no configuration
   # CLI: wallflow bing      - Bing Photo of the Day
